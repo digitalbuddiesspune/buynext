@@ -16,7 +16,7 @@ import offerZone2Img from '../assets/offerzone2.png';
 import offerZone3Img from '../assets/offerzone3.png';
 import offerZone4Img from '../assets/offerzone4.png';
 
-const DoorMartSections = () => {
+const BuyNestSections = () => {
   const navigate = useNavigate();
 
   // Click Handler Function
@@ -622,4 +622,4 @@ const DoorMartSections = () => {
   );
 };
 
-export default DoorMartSections;
+export default BuyNestSections;

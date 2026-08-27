@@ -1,105 +1,157 @@
+import React from 'react';
 import ScrollToTop from '../components/ScrollToTop';
+import { Sparkles, Target, Eye, ShieldCheck, HeartHandshake, Lightbulb, CheckCircle2, Building, Mail, Phone, MapPin } from 'lucide-react';
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-6xl mx-auto px-6 py-16">
-        
-        {/* Hero Section */}
-        <div className="text-center mb-20">
-          <h1 className="text-5xl md:text-6xl font-light tracking-widest mb-6 text-black">
-            ABOUT US
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50 text-gray-800">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white py-16 sm:py-20 px-4 sm:px-6 lg:px-8 text-center">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        <div className="relative max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/10 text-white/90 text-xs font-semibold uppercase tracking-wider mb-4 border border-white/20">
+            <Sparkles className="w-3.5 h-3.5 text-rose-400" />
+            About Us
+          </div>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
+            Welcome to Barringer Pharma
           </h1>
-          <div className="w-24 h-0.5 bg-gradient-to-r from-transparent via-amber-600 to-transparent mx-auto mb-8"></div>
-          <p className="text-lg text-gray-600 italic">Weaving Traditions, Draping Dreams</p>
+          <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Based in New Delhi, India, <strong className="text-white font-semibold">BARRINGER PHARMA PRIVATE LIMITED</strong> is a dynamic company dedicated to the distribution and sale of a wide range of cosmetics, beauty, and personal care products.
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-16">
+        
+        {/* Intro Highlight Box */}
+        <div className="bg-white rounded-2xl p-6 sm:p-10 border border-gray-200 shadow-sm">
+          <p className="text-base sm:text-lg text-gray-700 leading-relaxed text-center max-w-4xl mx-auto">
+            Our mission is to make premium cosmetics and beauty products accessible and affordable for everyone. Whether it's skincare, makeup, haircare, or daily-use personal care brands — we ensure variety, value, and quality under one roof.
+          </p>
         </div>
 
-        {/* Our Story Section */}
-        <div className="max-w-4xl mx-auto mb-20">
-          <div className="text-center mb-12">
-            <p className="text-lg text-gray-700 leading-relaxed mb-6">
-              At SareeSansar, we celebrate the timeless grace of Indian women through the nine yards of elegance — the saree. Our name reflects what we stand for — a world of sarees that unites the diverse weaves, colors, and stories of India under one roof.
+        {/* Vision & Mission Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          {/* Vision */}
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 mb-5">
+              <Eye className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Our Vision</h2>
+            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+              To become a leading name in the cosmetics distribution and retail sector by offering diverse, high-quality beauty products that enhance everyday living, while maintaining a strong presence in Delhi and across India.
             </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
-              From the looms of Banaras to the threads of Kanchipuram, from Bengal's soft cottons to Gujarat's vibrant Patolas — every saree in our collection carries a piece of tradition, culture, and craftsmanship. Each drape is not just a fabric, but a story woven with love, skill, and heritage.
+          </div>
+
+          {/* Mission */}
+          <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="w-12 h-12 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-5">
+              <Target className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Our Mission</h2>
+            <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
+              To deliver excellence in product availability, affordability, and service — ensuring every customer finds the right cosmetics and beauty products with complete satisfaction.
             </p>
           </div>
         </div>
 
-        {/* Vision Section */}
-        <div className="max-w-3xl mx-auto mb-20 text-center bg-gradient-to-br from-amber-50 to-white border-2 border-amber-100 rounded-lg p-12 shadow-lg">
-          <h2 className="text-3xl font-light tracking-wider mb-6 text-black">
-            OUR VISION
-          </h2>
-          <p className="text-lg text-gray-700 leading-relaxed">
-            To revive, preserve, and promote India's rich handloom heritage while blending it with contemporary elegance. SareeSansar strives to make traditional artistry accessible to every woman who believes in grace with authenticity.
-          </p>
-        </div>
+        {/* What We Stand For */}
+        <div>
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900">What We Stand For</h2>
+            <p className="text-gray-500 text-sm sm:text-base mt-2">Core pillars that guide everything we do</p>
+          </div>
 
-        {/* What Makes Us Special */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-light tracking-wider mb-12 text-black text-center">
-            WHAT MAKES SAREESANSAR SPECIAL?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            
-            <div className="flex items-start space-x-4 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="text-3xl text-amber-600">🧵</div>
-              <div>
-                <h3 className="text-xl font-semibold text-black mb-3">Authentic Handloom Sarees</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  We collaborate directly with skilled artisans and weavers across India to bring you genuine handwoven masterpieces.
-                </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:border-gray-300 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center mb-4">
+                <HeartHandshake className="w-5 h-5" />
               </div>
+              <h3 className="text-base font-bold text-gray-900 mb-2">Customer-Centric</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                We prioritize customer satisfaction by helping people find the right beauty and skincare products for their needs.
+              </p>
             </div>
 
-            <div className="flex items-start space-x-4 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="text-3xl text-amber-600">✨</div>
-              <div>
-                <h3 className="text-xl font-semibold text-black mb-3">Curated for Every Occasion</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  Whether you're dressing up for a festive celebration, a wedding, or a simple workday, we have something crafted just for you.
-                </p>
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:border-gray-300 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                <ShieldCheck className="w-5 h-5" />
               </div>
+              <h3 className="text-base font-bold text-gray-900 mb-2">Quality Assurance</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                Every cosmetic product is carefully sourced from trusted manufacturers and licensed brands.
+              </p>
             </div>
 
-            <div className="flex items-start space-x-4 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="text-3xl text-amber-600">🎨</div>
-              <div>
-                <h3 className="text-xl font-semibold text-black mb-3">Tradition Meets Modernity</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  Our designs combine classic patterns with modern aesthetics — perfect for today's confident, independent women.
-                </p>
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:border-gray-300 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
+                <Lightbulb className="w-5 h-5" />
               </div>
+              <h3 className="text-base font-bold text-gray-900 mb-2">Innovation</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                Continuously expanding our portfolio with the latest beauty trends and innovations.
+              </p>
             </div>
 
-            <div className="flex items-start space-x-4 p-6 bg-white border-2 border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-              <div className="text-3xl text-amber-600">🛍️</div>
-              <div>
-                <h3 className="text-xl font-semibold text-black mb-3">Seamless Shopping Experience</h3>
-                <p className="text-gray-700 leading-relaxed">
-                  Explore a rich collection from the comfort of your home. With easy returns, secure payments, and reliable delivery — shopping made graceful.
-                </p>
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:border-gray-300 transition-all">
+              <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
+              <h3 className="text-base font-bold text-gray-900 mb-2">Trust</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                Building long-term relationships through integrity, transparency, and accountability.
+              </p>
             </div>
-
           </div>
         </div>
 
-        {/* Closing Message */}
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl font-light tracking-wider mb-8 text-black">
-            CELEBRATE EVERY MOMENT WITH SAREESANSAR
-          </h2>
-          <p className="text-lg text-gray-700 leading-relaxed mb-6">
-            Be it a Kanjivaram that shines at weddings, a soft linen saree for daytime charm, or a Banarasi that turns every occasion into a celebration — SareeSansar brings you collections that make every woman feel special.
-          </p>
-          <p className="text-lg text-gray-700 leading-relaxed mb-8">
-            Our sarees aren't just garments — they're a tribute to Indian craftsmanship, a reflection of tradition, and a celebration of you.
-          </p>
-          <p className="text-xl font-light text-amber-700 italic tracking-wide">
-            Discover your story. Drape your tradition. Only at SareeSansar.
-          </p>
+        {/* Company Information */}
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 text-white rounded-2xl p-6 sm:p-10 shadow-lg">
+          <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-700">
+            <Building className="w-6 h-6 text-rose-400" />
+            <h2 className="text-xl sm:text-2xl font-bold">Company Information</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 text-sm sm:text-base">
+            <div>
+              <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-1">Company Name</p>
+              <p className="text-white font-semibold text-lg">BARRINGER PHARMA PRIVATE LIMITED</p>
+              
+              <div className="mt-5">
+                <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-2 flex items-center gap-1.5">
+                  <MapPin className="w-4 h-4 text-rose-400 shrink-0" />
+                  Registered Address
+                </p>
+                <p className="text-gray-200 leading-relaxed">
+                  Office No 110, Vishal Tower, District Centre, Janakpuri<br />
+                  New Delhi, Delhi - 110058, India
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 md:border-l md:border-gray-700 md:pl-8">
+              <div>
+                <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-1 flex items-center gap-1.5">
+                  <Mail className="w-4 h-4 text-rose-400 shrink-0" />
+                  Email
+                </p>
+                <a href="mailto:pharmabarringer@gmail.com" className="text-rose-300 hover:text-rose-200 underline font-medium">
+                  pharmabarringer@gmail.com
+                </a>
+              </div>
+
+              <div>
+                <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-1 flex items-center gap-1.5">
+                  <Phone className="w-4 h-4 text-rose-400 shrink-0" />
+                  Mobile
+                </p>
+                <a href="tel:8745015901" className="text-white hover:text-rose-200 font-medium">
+                  8745015901
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

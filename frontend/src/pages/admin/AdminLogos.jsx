@@ -41,13 +41,13 @@ const AdminLogos = () => {
       // Set defaults if not found
       if (!logosMap.header.url) {
         logosMap.header.url = 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774521755/Untitled_1500_x_500_px_1_t89yk3.png';
-        logosMap.header.alt = 'DoorMart';
+        logosMap.header.alt = 'BuyNest';
         logosMap.header.width = 'auto';
         logosMap.header.height = 'auto';
       }
       if (!logosMap.footer.url) {
         logosMap.footer.url = 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774521755/Untitled_1500_x_500_px_1_t89yk3.png';
-        logosMap.footer.alt = 'DoorMart';
+        logosMap.footer.alt = 'BuyNest';
         logosMap.footer.width = 'auto';
         logosMap.footer.height = 'auto';
       }

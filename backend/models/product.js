@@ -21,11 +21,11 @@ const parseRupeeValue = (value) => {
 
 const productSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },                  // Product title
-    mrp: { type: Number, required: true },                    // MRP (maximum retail price)
-    discountPercent: { type: Number, default: 0, min: 0, max: 100 }, // Discount in %
+    title: { type: String },
+    mrp: { type: Number },
+    discountPercent: { type: Number, default: 0, min: 0, max: 100 },
     description: { type: String },
-    category: { type: String, required: true, index: true },
+    category: { type: String, index: true },
     subcategory: { type: String, default: "", index: true },
     subSubCategory: { type: String, default: "", index: true },
     categoryId: { 
@@ -55,56 +55,86 @@ const productSchema = new mongoose.Schema(
     product_info: {
       brand: { type: String },
       manufacturer: { type: String },
-      // For Shoes
-      availableSizes: { type: [String], default: [] }, // e.g., ["7", "8", "9", "10"] or ["EU 42", "US 9"]
-      shoeSize: { type: String }, // Legacy field - kept for backward compatibility
-      shoeMaterial: { type: String }, // e.g., "Leather", "Canvas", "Mesh"
+      availableSizes: { type: [String], default: [] },
+      shoeSize: { type: String },
+      shoeMaterial: { type: String },
       shoeColor: { type: String },
-      shoeType: { type: String }, // e.g., "Sneakers", "Formal", "Sports", "Casual", "Boots"
-      // For Watches
+      shoeType: { type: String },
       watchBrand: { type: String },
-      movementType: { type: String }, // e.g., "Quartz", "Automatic", "Mechanical"
-      caseMaterial: { type: String }, // e.g., "Stainless Steel", "Titanium", "Ceramic"
-      bandMaterial: { type: String }, // e.g., "Leather", "Metal", "Rubber", "Fabric"
-      waterResistance: { type: String }, // e.g., "50m", "100m", "200m"
-      watchType: { type: String }, // e.g., "Analog", "Digital", "Smart Watch"
+      movementType: { type: String },
+      caseMaterial: { type: String },
+      bandMaterial: { type: String },
+      waterResistance: { type: String },
+      watchType: { type: String },
       IncludedComponents: { type: String },
     },
 
     images: {
-      image1: { type: String, required: true },
+      image1: { type: String },
       image2: { type: String },
       image3: { type: String },
     },
   },
-  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
+  {
+    strict: false,
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
-// Virtual field: Final price to display (no discount applied)
-// Your requirement is to remove % discount from all customer-facing calculations.
+// Virtual field: Final price to display
 productSchema.virtual("price").get(function () {
-  return Math.round(this.mrp || 0);
+  const val = this.mrp ?? this.get("MRP") ?? this._doc?.["MRP"] ?? this.sourceData?.raw?.MRP;
+  return parseRupeeValue(val);
+});
+
+productSchema.post("init", function (doc) {
+  if (!doc.title && (doc._doc?.["SKU Name"] || doc.get("SKU Name"))) {
+    doc.title = doc._doc?.["SKU Name"] || doc.get("SKU Name");
+  }
+  if ((!doc.mrp || Number.isNaN(Number(doc.mrp))) && (doc._doc?.["MRP"] || doc.get("MRP"))) {
+    doc.mrp = parseRupeeValue(doc._doc?.["MRP"] || doc.get("MRP"));
+  }
+  if (!doc.description && (doc._doc?.["About the Product"] || doc.get("About the Product"))) {
+    doc.description = doc._doc?.["About the Product"] || doc.get("About the Product");
+  }
+  if (!doc.images) doc.images = {};
+  if (!doc.images.image1 && (doc._doc?.["Image Link"] || doc.get("Image Link"))) {
+    doc.images.image1 = doc._doc?.["Image Link"] || doc.get("Image Link");
+  }
+  if (!doc.category && (doc._doc?.["Category"] || doc.get("Category"))) {
+    doc.category = doc._doc?.["Category"] || doc.get("Category");
+  }
+  if (!doc.subcategory && (doc._doc?.["Sub-Category"] || doc.get("Sub-Category"))) {
+    doc.subcategory = doc._doc?.["Sub-Category"] || doc.get("Sub-Category");
+  }
+  if (!doc.product_info) doc.product_info = {};
+  if (!doc.product_info.brand && (doc._doc?.["Brand"] || doc.get("Brand"))) {
+    doc.product_info.brand = doc._doc?.["Brand"] || doc.get("Brand");
+  }
 });
 
 productSchema.pre("validate", function setDatasetDerivedFields(next) {
-  this.mrp = parseRupeeValue(this.mrp);
-
-  if (!this.description && this.sourceData?.aboutProduct) {
-    this.description = this.sourceData.aboutProduct;
+  if (!this.mrp && this.get("MRP")) {
+    this.mrp = parseRupeeValue(this.get("MRP"));
+  } else {
+    this.mrp = parseRupeeValue(this.mrp);
   }
 
-  if (!this.title && this.sourceData?.skuName) {
-    this.title = this.sourceData.skuName;
+  if (!this.description && (this.sourceData?.aboutProduct || this.get("About the Product"))) {
+    this.description = this.sourceData?.aboutProduct || this.get("About the Product");
   }
 
-  if (this.taxonomy?.mainCategory && !this.category) {
-    this.category = this.taxonomy.mainCategory;
+  if (!this.title && (this.sourceData?.skuName || this.get("SKU Name"))) {
+    this.title = this.sourceData?.skuName || this.get("SKU Name");
   }
-  if (this.taxonomy?.subCategory && !this.subcategory) {
-    this.subcategory = this.taxonomy.subCategory;
+
+  if (!this.category && (this.taxonomy?.mainCategory || this.get("Category"))) {
+    this.category = this.taxonomy?.mainCategory || this.get("Category");
   }
-  if (this.taxonomy?.subSubCategory && !this.subSubCategory) {
-    this.subSubCategory = this.taxonomy.subSubCategory;
+  if (!this.subcategory && (this.taxonomy?.subCategory || this.get("Sub-Category"))) {
+    this.subcategory = this.taxonomy?.subCategory || this.get("Sub-Category");
   }
 
   if (!this.taxonomy) this.taxonomy = {};
@@ -113,11 +143,12 @@ productSchema.pre("validate", function setDatasetDerivedFields(next) {
   this.taxonomy.subSubCategorySlug = slugify(this.taxonomy.subSubCategory || this.subSubCategory || "");
 
   if (!this.images) this.images = {};
-  if (!this.images.image1 && this.sourceData?.imageLink) {
-    this.images.image1 = this.sourceData.imageLink;
+  if (!this.images.image1 && (this.sourceData?.imageLink || this.get("Image Link"))) {
+    this.images.image1 = this.sourceData?.imageLink || this.get("Image Link");
   }
 
   next();
 });
 
-export const Product = mongoose.model("Product", productSchema);
+export const Product = mongoose.models.Product || mongoose.model("Product", productSchema);
+export default Product;

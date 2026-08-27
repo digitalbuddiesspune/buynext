@@ -30,8 +30,8 @@ const Invoice = ({ order, user, onPrint }) => {
       <div className="border-b-2 border-gray-200 pb-6 mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">DoorMart</h1>
-            <p className="text-gray-600">Your trusted shopping partner</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Barringer Pharma</h1>
+            <p className="text-gray-600">BARRINGER PHARMA PRIVATE LIMITED</p>
           </div>
           <div className="text-right">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">INVOICE</h2>
@@ -87,9 +87,9 @@ const Invoice = ({ order, user, onPrint }) => {
             <tbody>
               {order.items?.map((item, index) => {
                 const product = item.product || {};
-                const productTitle = product.title || product.name || 'Product';
+                const productTitle = product.title || product['SKU Name'] || product.name || 'Product';
                 const productImage = getProductImage(product, 'image1');
-                const itemPrice = item.price || product.price || 0;
+                const itemPrice = item.price || product.price || product.mrp || 0;
                 const quantity = item.quantity || 1;
                 const itemTotal = itemPrice * quantity;
 

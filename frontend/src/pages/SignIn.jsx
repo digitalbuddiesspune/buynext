@@ -471,13 +471,6 @@ const SignIn = () => {
                         </>
                       )}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate(closePath)}
-                      className="w-full border-2 border-gray-300 text-gray-700 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform active:scale-[0.98] text-sm sm:text-base"
-                    >
-                      Continue as Guest
-                    </button>
                   </div>
                 </form>
               ) : step === 1 ? (
@@ -536,13 +529,6 @@ const SignIn = () => {
                       ) : (
                         'Send OTP'
                       )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate(closePath)}
-                      className="w-full border-2 border-gray-300 text-gray-700 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform active:scale-[0.98] text-sm sm:text-base"
-                    >
-                      Continue as Guest
                     </button>
                   </div>
                 </form>
@@ -634,13 +620,6 @@ const SignIn = () => {
                       ) : (
                         'Verify OTP'
                       )}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate(closePath)}
-                      className="w-full border-2 border-gray-300 text-gray-700 py-2.5 sm:py-3 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform active:scale-[0.98] text-sm sm:text-base"
-                    >
-                      Continue as Guest
                     </button>
                   </div>
                 </form>

@@ -39,6 +39,8 @@ server.set('trust proxy', 1);
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 const allowedOrigins = new Set([
   frontendUrl,
+  'https://www.buynest.shop',
+  'https://buynest.shop',
   'https://www.doormart.shop',
   'https://doormart.shop',
   'http://localhost:5173',
@@ -47,12 +49,18 @@ const allowedOrigins = new Set([
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g., health checks, server-to-server calls)
-    if (!origin || allowedOrigins.has(origin)) {
+    if (
+      !origin ||
+      origin === 'null' ||
+      allowedOrigins.has(origin) ||
+      origin.includes('payu.in') ||
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1')
+    ) {
       callback(null, true);
       return;
     }
-    callback(new Error(`Not allowed by CORS: ${origin}`));
+    callback(null, true);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],

@@ -93,7 +93,7 @@ const AdminLayout = () => {
               </div>
               <div>
                 <div className="text-lg font-bold text-gray-900">Admin Panel</div>
-                <div className="text-xs text-gray-500">DoorMart Management</div>
+                <div className="text-xs text-gray-500">BuyNest Management</div>
               </div>
             </div>
           </div>
@@ -142,7 +142,7 @@ const AdminLayout = () => {
                   </div>
                   <div className="min-w-0">
                     <div className="text-base sm:text-lg font-bold text-gray-900 truncate">Admin Panel</div>
-                    <div className="text-xs text-gray-500 truncate">DoorMart Management</div>
+                    <div className="text-xs text-gray-500 truncate">BuyNest Management</div>
                   </div>
                 </div>
                 <button

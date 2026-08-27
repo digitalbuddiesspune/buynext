@@ -20,7 +20,7 @@ const contactInfoSchema = new mongoose.Schema(
     },
     companyName: {
       type: String,
-      default: 'DoorMart',
+      default: 'BuyNest',
       trim: true,
     },
   },
@@ -32,10 +32,10 @@ contactInfoSchema.statics.getContactInfo = async function () {
   let contactInfo = await this.findOne();
   if (!contactInfo) {
     contactInfo = await this.create({
-      email: 'support@doormart.com',
-      phone: '+91 98765 43210',
-      address: 'DoorMart Headquarters, 123 Playful Lane, Mumbai, India 400001',
-      companyName: 'DoorMart',
+      email: 'pharmabarringer@gmail.com',
+      phone: '8745015901',
+      address: 'Office No 110, Vishal Tower, District Centre, Janakpuri, New Delhi, Delhi - 110058, India',
+      companyName: 'BuyNest',
     });
   }
   return contactInfo;

@@ -54,6 +54,14 @@ export const getProductImage = (product, imageKey = 'image1') => {
     return product.image;
   }
 
+  if (product['Image Link'] && typeof product['Image Link'] === 'string') {
+    return product['Image Link'];
+  }
+
+  if (product.imageLink && typeof product.imageLink === 'string') {
+    return product.imageLink;
+  }
+
   // Check sourceData.imageLink for raw product data
   if (product.sourceData?.imageLink && typeof product.sourceData.imageLink === 'string') {
     return product.sourceData.imageLink;

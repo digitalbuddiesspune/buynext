@@ -1,5 +1,13 @@
 import Order from '../models/Order.js';
-import { Product } from '../models/product.js';
+import { Product } from '../models/Product.js';
+
+const parseRupeeToNumber = (value) => {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+  const numeric = String(value).replace(/[^0-9.]/g, '');
+  const parsed = Number(numeric);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 // Helper function to find product in unified collection
 async function findProductById(productId) {
@@ -7,9 +15,7 @@ async function findProductById(productId) {
     return null;
   }
   
-  // Convert to string if it's an ObjectId
-  const idString = productId.toString ? productId.toString() : productId;
-  
+  const idString = productId._id ? productId._id.toString() : (productId.toString ? productId.toString() : productId);
   return Product.findById(idString);
 }
 
@@ -22,35 +28,50 @@ async function populateOrderItems(items) {
   return Promise.all(
     items.map(async (item) => {
       try {
-        // Handle both ObjectId and string product IDs
-        const productId = item.product?.toString ? item.product.toString() : item.product;
+        const productId = item.product?._id || (item.product?.toString ? item.product.toString() : item.product);
         
         if (!productId) {
-          console.warn(`[populateOrderItems] Item missing product ID:`, item);
           return {
             ...item,
-            product: { _id: null, title: 'Product not found' },
+            price: item.price || 0,
+            product: { _id: null, title: 'Product' },
           };
         }
         
         const product = await findProductById(productId);
-        // Convert Mongoose document to plain object to ensure proper serialization
         const productObj = product ? (product.toObject ? product.toObject() : product) : null;
         
-        if (!productObj) {
-          console.warn(`[populateOrderItems] Product not found for ID: ${productId}`);
+        if (productObj) {
+          if (!productObj.title && productObj['SKU Name']) {
+            productObj.title = productObj['SKU Name'];
+          }
+          if ((!productObj.mrp || Number.isNaN(Number(productObj.mrp))) && productObj['MRP']) {
+            productObj.mrp = parseRupeeToNumber(productObj['MRP']);
+          }
+          if (!productObj.images) productObj.images = {};
+          if (!productObj.images.image1 && productObj['Image Link']) {
+            productObj.images.image1 = productObj['Image Link'];
+          }
+          if (!productObj.price) {
+            productObj.price = productObj.mrp || parseRupeeToNumber(productObj['MRP']) || 0;
+          }
         }
         
-        // item is already a plain object from .lean(), so just spread it
+        const effectivePrice = item.price && item.price > 0 
+          ? item.price 
+          : (productObj?.price || productObj?.mrp || parseRupeeToNumber(productObj?.['MRP']) || 0);
+
         return {
           ...item,
-          product: productObj || { _id: productId, title: 'Product not found' },
+          price: effectivePrice,
+          product: productObj || { _id: productId, title: 'Product', price: effectivePrice },
         };
       } catch (err) {
         console.error(`[populateOrderItems] Error processing item:`, err);
         return {
           ...item,
-          product: { _id: item.product, title: 'Error loading product' },
+          price: item.price || 0,
+          product: { _id: item.product, title: 'Product' },
         };
       }
     })
@@ -62,27 +83,25 @@ export const getMyOrders = async (req, res) => {
     const userId = req.userId;
     if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
-    console.log(`[getMyOrders] Fetching orders for user: ${userId}`);
-    
     const orders = await Order.find({ user: userId })
       .sort({ createdAt: -1 })
       .lean();
 
-    console.log(`[getMyOrders] Found ${orders.length} orders`);
-
-    // Manually populate products from all collections
     const populatedOrders = await Promise.all(
-      orders.map(async (order, index) => {
+      orders.map(async (order) => {
         try {
-          console.log(`[getMyOrders] Processing order ${index + 1}/${orders.length}, items: ${order.items?.length || 0}`);
           const populatedItems = await populateOrderItems(order.items || []);
+          const totalAmount = (order.amount && order.amount > 0)
+            ? order.amount
+            : populatedItems.reduce((sum, it) => sum + (it.price * (it.quantity || 1)), 0);
+
           return {
             ...order,
+            amount: totalAmount,
             items: populatedItems,
           };
         } catch (err) {
           console.error(`[getMyOrders] Error processing order ${order._id}:`, err);
-          // Return order with empty items if population fails
           return {
             ...order,
             items: [],
@@ -91,11 +110,9 @@ export const getMyOrders = async (req, res) => {
       })
     );
 
-    console.log(`[getMyOrders] Successfully populated ${populatedOrders.length} orders`);
     return res.json(populatedOrders);
   } catch (err) {
     console.error('[getMyOrders] Error fetching orders:', err);
-    console.error('[getMyOrders] Error stack:', err.stack);
     return res.status(500).json({ message: 'Failed to fetch orders', error: err.message });
   }
 };
@@ -109,10 +126,14 @@ export const getOrderById = async (req, res) => {
     const order = await Order.findOne({ _id: id, user: userId }).lean();
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
-    // Manually populate products from all collections
     const populatedItems = await populateOrderItems(order.items || []);
+    const totalAmount = (order.amount && order.amount > 0)
+      ? order.amount
+      : populatedItems.reduce((sum, it) => sum + (it.price * (it.quantity || 1)), 0);
+
     const populatedOrder = {
       ...order,
+      amount: totalAmount,
       items: populatedItems,
     };
 

@@ -2,13 +2,23 @@ import { Router } from 'express';
 import mongoose from 'mongoose';
 import auth from '../middleware/auth.js';
 import Cart from '../models/Cart.js';
-import { Product } from '../models/product.js';
+import { Product } from '../models/Product.js';
 
 const router = Router();
 
+const parseRupeeToNumber = (value) => {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+  const numeric = String(value).replace(/[^0-9.]/g, '');
+  const parsed = Number(numeric);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 // Helper function to find product in unified collection
 async function findProductById(productId) {
-  return Product.findById(productId);
+  if (!productId) return null;
+  const idString = productId._id ? productId._id.toString() : (productId.toString ? productId.toString() : productId);
+  return Product.findById(idString);
 }
 
 // Helper function to populate cart items
@@ -16,11 +26,25 @@ async function populateCartItems(items) {
   return Promise.all(
     items.map(async (item) => {
       const product = await findProductById(item.product);
-      // Convert Mongoose document to plain object to ensure proper serialization
-      const productObj = product ? (product.toObject ? product.toObject() : product) : item.product;
+      const productObj = product ? (product.toObject ? product.toObject() : product) : null;
+      if (productObj) {
+        if (!productObj.title && productObj['SKU Name']) {
+          productObj.title = productObj['SKU Name'];
+        }
+        if ((!productObj.mrp || Number.isNaN(Number(productObj.mrp))) && productObj['MRP']) {
+          productObj.mrp = parseRupeeToNumber(productObj['MRP']);
+        }
+        if (!productObj.images) productObj.images = {};
+        if (!productObj.images.image1 && productObj['Image Link']) {
+          productObj.images.image1 = productObj['Image Link'];
+        }
+        if (!productObj.price) {
+          productObj.price = productObj.mrp || parseRupeeToNumber(productObj['MRP']) || 0;
+        }
+      }
       return {
-        ...item.toObject(),
-        product: productObj, // Keep original ID if product not found
+        ...(item.toObject ? item.toObject() : item),
+        product: productObj || item.product,
       };
     })
   );

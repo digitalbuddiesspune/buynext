@@ -1270,7 +1270,7 @@ export default function FlipkartAccountSettings() {
                               <div className="space-y-2 mb-4">
                                 {order.items?.slice(0, isExpanded ? order.items.length : 2).map((it, idx) => {
                                   const productImage = getProductImage(it.product, 'image1');
-                                  const productTitle = it.product?.title || it.product?.name || 'Product';
+                                  const productTitle = it.product?.title || it.product?.['SKU Name'] || it.product?.name || 'Product';
                                   const productPrice = it.price || it.product?.price || it.product?.mrp || 0;
                                   
                                   return (

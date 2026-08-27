@@ -266,6 +266,21 @@ export const createCodOrder = async () => {
   return res.json();
 };
 
+export const initiatePayuPayment = async () => {
+  const res = await fetch(`${API_URL}/payment/payu/initiate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    const error = new Error(errorData.error || "Failed to initiate PayU payment");
+    error.response = errorData;
+    throw error;
+  }
+  return res.json();
+};
+
 
 // ---------------------------------------------------------
 // ORDERS

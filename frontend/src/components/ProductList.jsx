@@ -79,7 +79,7 @@ const getProductBrand = (p) =>
   p?.product_info?.manufacturer ||
   p?.manufacturer ||
   p?.product_info?.brandName ||
-  'DoorMart';
+  'BuyNest';
 
 const getProductShortDescription = (p) =>
   String(

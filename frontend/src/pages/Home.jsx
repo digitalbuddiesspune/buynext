@@ -2,7 +2,7 @@ import React from 'react';
 import Collections from '../components/Collections';
 import MobileBottomNav from '../components/MobileBottomNav';
 import HeroSlider from '../components/HeroSlider';
-import DoorMartSections from '../components/TickNTrackSections';
+import BuyNestSections from '../components/TickNTrackSections';
 import ScrollToTop from '../components/ScrollToTop';
 import heroBanner1 from '../assets/hero banner 1.png';
 import heroBanner3 from '../assets/herobanner3.png';
@@ -34,8 +34,8 @@ const Home = () => {
         mobileSrc={heroBanner1}
       />
 
-      {/* DoorMart Sections */}
-      <DoorMartSections />
+      {/* BuyNest Sections */}
+      <BuyNestSections />
 
       {/* Featured Collections */}
 

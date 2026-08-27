@@ -1,7 +1,7 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { getMyAddress, saveMyAddress, deleteAddressById, updateAddressById, createPaymentOrder, verifyPayment, createCodOrder } from '../services/api';
+import { getMyAddress, saveMyAddress, deleteAddressById, updateAddressById, createPaymentOrder, verifyPayment, createCodOrder, initiatePayuPayment } from '../services/api';
 import ScrollToTop from '../components/ScrollToTop';
 
 const indianStates = [
@@ -67,10 +67,19 @@ export default function AddressForm() {
     addressType: 'home'
   });
 
+  const location = useLocation();
   const [showSuccess, setShowSuccess] = useState(false);
   const [showForm, setShowForm] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState('online'); // 'online' or 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('payu'); // 'payu', 'razorpay', or 'cod'
   const { cart, cartTotal: total, loadCart } = useCart();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('payment') === 'failed') {
+      const reason = params.get('reason') || 'Payment was unsuccessful or cancelled.';
+      alert(`Payment Failed: ${decodeURIComponent(reason)}`);
+    }
+  }, [location.search]);
 
   // Calculate price details
   const calculatePriceDetails = () => {
@@ -106,10 +115,8 @@ export default function AddressForm() {
       try {
         const result = await createCodOrder();
         if (result && result.success) {
-          // Store order total before clearing cart
           localStorage.setItem('lastOrderTotal', priceDetails.total.toString());
           await loadCart();
-          // Redirect to order success page
           const orderId = result.order?._id || result.order?.id || '';
           navigate(`/order-success?method=COD&orderId=${orderId}`);
         } else {
@@ -123,74 +130,101 @@ export default function AddressForm() {
       }
       return;
     }
-    
-    // Handle Online Payment
-    try {
-      if (!window.Razorpay) {
-        await new Promise((resolve, reject) => {
-          const s = document.createElement('script');
-          s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-          s.onload = resolve;
-          s.onerror = reject;
-          document.body.appendChild(s);
-        });
+
+    // Handle PayU Payment Gateway
+    if (paymentMethod === 'payu') {
+      try {
+        const res = await initiatePayuPayment();
+        if (res && res.success && res.action && res.params) {
+          // Store order total before redirecting
+          localStorage.setItem('lastOrderTotal', priceDetails.total.toString());
+
+          // Create a dynamic HTML form and submit to PayU checkout URL
+          const form = document.createElement('form');
+          form.method = 'POST';
+          form.action = res.action;
+
+          Object.keys(res.params).forEach((key) => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = res.params[key] != null ? res.params[key] : '';
+            form.appendChild(input);
+          });
+
+          document.body.appendChild(form);
+          form.submit();
+        } else {
+          alert(res?.error || 'Failed to initiate PayU payment. Please try again.');
+        }
+      } catch (e) {
+        console.error('PayU payment error:', e);
+        alert(e?.message || 'Unable to start PayU payment. Please try another method.');
       }
-      const amount = priceDetails.total;
-      const { order, key } = await createPaymentOrder(amount, {
-        name: formData.name,
-        mobile: formData.mobile,
-        city: formData.city,
-      });
-      const options = {
-        key,
-        amount: order.amount,
-        currency: order.currency,
-        name: 'DoorMart',
-        description: 'Order Payment',
-        order_id: order.id,
-        prefill: { name: formData.name || '', contact: formData.mobile || '' },
-        theme: { color: '#5c9404' },
-        handler: async function (response) {
-          try {
-            console.log('[Razorpay] Payment response received:', response);
-            
-            // Ensure we send the correct field names
-            const paymentData = {
-              razorpay_order_id: response.razorpay_order_id || response.razorpayOrderId,
-              razorpay_payment_id: response.razorpay_payment_id || response.razorpayPaymentId,
-              razorpay_signature: response.razorpay_signature || response.razorpaySignature,
-            };
-            
-            console.log('[Razorpay] Sending to backend:', paymentData);
-            
-            const r = await verifyPayment(paymentData);
-            if (r && r.success) {
-              // Store order total before clearing cart
-              localStorage.setItem('lastOrderTotal', amount.toString());
-              await loadCart();
-              // Redirect to order success page
-              const orderId = r.order?._id || r.order?.id || '';
-              navigate(`/order-success?method=online&orderId=${orderId}`);
-            } else {
-              const errorMsg = r?.error || 'Payment verification failed';
+      return;
+    }
+    
+    // Handle Razorpay Online Payment
+    if (paymentMethod === 'razorpay' || paymentMethod === 'online') {
+      try {
+        if (!window.Razorpay) {
+          await new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.body.appendChild(s);
+          });
+        }
+        const amount = priceDetails.total;
+        const { order, key } = await createPaymentOrder(amount, {
+          name: formData.name,
+          mobile: formData.mobile,
+          city: formData.city,
+        });
+        const options = {
+          key,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'BuyNest',
+          description: 'Order Payment',
+          order_id: order.id,
+          prefill: { name: formData.name || '', contact: formData.mobile || '' },
+          theme: { color: '#ec4899' },
+          handler: async function (response) {
+            try {
+              console.log('[Razorpay] Payment response received:', response);
+              
+              const paymentData = {
+                razorpay_order_id: response.razorpay_order_id || response.razorpayOrderId,
+                razorpay_payment_id: response.razorpay_payment_id || response.razorpayPaymentId,
+                razorpay_signature: response.razorpay_signature || response.razorpaySignature,
+              };
+              
+              console.log('[Razorpay] Sending to backend:', paymentData);
+              
+              const r = await verifyPayment(paymentData);
+              if (r && r.success) {
+                localStorage.setItem('lastOrderTotal', amount.toString());
+                await loadCart();
+                const orderId = r.order?._id || r.order?.id || '';
+                navigate(`/order-success?method=online&orderId=${orderId}`);
+              } else {
+                const errorMsg = r?.error || 'Payment verification failed';
+                alert(errorMsg);
+              }
+            } catch (e) {
+              console.error('[Razorpay] Payment verification error:', e);
+              const errorMsg = e?.message || e?.response?.error || 'Payment verification failed. Please contact support if amount was deducted.';
               alert(errorMsg);
             }
-          } catch (e) {
-            console.error('[Razorpay] Payment verification error:', e);
-            console.error('[Razorpay] Error details:', {
-              message: e?.message,
-              response: e?.response,
-              stack: e?.stack,
-            });
-            const errorMsg = e?.message || e?.response?.error || 'Payment verification failed. Please contact support if amount was deducted.';
-            alert(errorMsg);
-          }
-        },
-      };
-      const rzp = new window.Razorpay(options);
-      rzp.open();
-    } catch (e) {
-      alert('Unable to start payment');
+          },
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      } catch (e) {
+        alert('Unable to start payment');
+      }
     }
   };
 
@@ -1001,31 +1035,59 @@ export default function AddressForm() {
               <div className="mb-3 sm:mb-4 pb-3 sm:pb-4 border-b-2 border-gray-200">
                 <h4 className="text-black font-semibold mb-2 sm:mb-3 text-xs sm:text-sm">Select Payment Method</h4>
                 <div className="space-y-2">
+                  {/* PayU Payment */}
                   <label className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'online' 
-                      ? 'border-pink-500 bg-white' 
+                    paymentMethod === 'payu' 
+                      ? 'border-pink-500 bg-pink-50/40' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}>
                     <input
                       type="radio"
                       name="paymentMethod"
-                      value="online"
-                      checked={paymentMethod === 'online'}
+                      value="payu"
+                      checked={paymentMethod === 'payu'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
                       className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-xs sm:text-sm text-black">Online Payment</div>
-                      <div className="text-xs text-black">Pay securely with Razorpay</div>
+                      <div className="font-semibold text-xs sm:text-sm text-black flex items-center gap-1.5">
+                        <span>PayU Payment Gateway</span>
+                        <span className="bg-green-100 text-green-800 text-[10px] font-bold px-1.5 py-0.5 rounded">FAST</span>
+                      </div>
+                      <div className="text-xs text-gray-600">UPI (GPay/PhonePe/Paytm), Cards, NetBanking, Wallets</div>
                     </div>
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
                   </label>
+
+                  {/* Razorpay Payment */}
+                  <label className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'razorpay' 
+                      ? 'border-pink-500 bg-pink-50/40' 
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="razorpay"
+                      checked={paymentMethod === 'razorpay'}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-xs sm:text-sm text-black">Razorpay Online Payment</div>
+                      <div className="text-xs text-gray-600">Pay securely with Razorpay</div>
+                    </div>
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </label>
                   
+                  {/* Cash on Delivery */}
                   <label className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 cursor-pointer transition-all ${
                     paymentMethod === 'cod' 
-                      ? 'border-pink-500 bg-white' 
+                      ? 'border-pink-500 bg-pink-50/40' 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}>
                     <input
@@ -1037,10 +1099,10 @@ export default function AddressForm() {
                       className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-xs sm:text-sm text-black">Cash on Delivery</div>
-                      <div className="text-xs text-black">Pay when you receive your order</div>
+                      <div className="font-medium text-xs sm:text-sm text-black">Cash on Delivery (COD)</div>
+                      <div className="text-xs text-gray-600">Pay cash or UPI when you receive your order</div>
                     </div>
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-black flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </label>

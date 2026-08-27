@@ -3,7 +3,16 @@ import crypto from 'crypto';
 import Cart from '../models/Cart.js';
 import Order from '../models/Order.js';
 import { Address } from '../models/Address.js';
-import { Product } from '../models/product.js';
+import { Product } from '../models/Product.js';
+import { User } from '../models/User.js';
+
+const parseRupeeToNumber = (value) => {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+  const numeric = String(value).replace(/[^0-9.]/g, '');
+  const parsed = Number(numeric);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
 
 const getClient = () => {
   const key_id = process.env.RAZORPAY_KEY_ID || '';
@@ -11,6 +20,11 @@ const getClient = () => {
   if (!key_id || !key_secret) return null;
   return { client: new Razorpay({ key_id, key_secret }), key_id, key_secret };
 };
+
+// Helper function to find product in unified collection
+async function findProductById(productId) {
+  return Product.findById(productId);
+}
 
 export const createOrder = async (req, res) => {
   try {
@@ -42,7 +56,6 @@ export const createOrder = async (req, res) => {
 
 export const verifyPayment = async (req, res) => {
   try {
-    // Handle both snake_case and camelCase field names from Razorpay
     const {
       razorpay_order_id,
       razorpay_payment_id,
@@ -52,7 +65,6 @@ export const verifyPayment = async (req, res) => {
       razorpaySignature
     } = req.body || {};
     
-    // Use snake_case first, fallback to camelCase
     const orderId = razorpay_order_id || razorpayOrderId;
     const paymentId = razorpay_payment_id || razorpayPaymentId;
     const signature = razorpay_signature || razorpaySignature;
@@ -107,20 +119,20 @@ export const verifyPayment = async (req, res) => {
           throw new Error(`Product ${i.product} not found`);
         }
         
-        let base = 0;
-        if (product && typeof product.price === 'number') {
-          base = Number(product.price) || 0;
-        } else {
-          // No % discount: base amount is always the MRP.
-          const mrp = Number(product?.mrp) || 0;
-          base = Math.round(mrp) || 0;
-        }
+        const base = parseRupeeToNumber(
+          product.price ||
+          product.mrp ||
+          product.MRP ||
+          product.get?.('MRP') ||
+          product._doc?.['MRP'] ||
+          0
+        );
         
         return { 
           product: product._id, 
           quantity: i.quantity, 
           price: base,
-          size: i.size || undefined // Include size if available
+          size: i.size || undefined
         };
       })
     );
@@ -144,6 +156,7 @@ export const verifyPayment = async (req, res) => {
       amount,
       currency: 'INR',
       status: 'paid',
+      paymentMethod: 'Razorpay',
       razorpayOrderId: orderId,
       razorpayPaymentId: paymentId,
       razorpaySignature: signature,
@@ -161,11 +174,6 @@ export const verifyPayment = async (req, res) => {
     return res.status(500).json({ error: err.message || 'Verification failed' });
   }
 };
-
-// Helper function to find product in unified collection
-async function findProductById(productId) {
-  return Product.findById(productId);
-}
 
 export const createCodOrder = async (req, res) => {
   try {
@@ -185,14 +193,14 @@ export const createCodOrder = async (req, res) => {
           throw new Error(`Product ${i.product} not found`);
         }
         
-        let base = 0;
-        if (product && typeof product.price === 'number') {
-          base = Number(product.price) || 0;
-        } else {
-          // No % discount: base amount is always the MRP.
-          const mrp = Number(product?.mrp) || 0;
-          base = Math.round(mrp) || 0;
-        }
+        const base = parseRupeeToNumber(
+          product.price ||
+          product.mrp ||
+          product.MRP ||
+          product.get?.('MRP') ||
+          product._doc?.['MRP'] ||
+          0
+        );
         
         return { 
           product: product._id, 
@@ -222,8 +230,8 @@ export const createCodOrder = async (req, res) => {
       items,
       amount,
       currency: 'INR',
-      status: 'created', // COD orders start as 'created', not 'paid'
-      paymentMethod: 'COD', // Add payment method field
+      status: 'created',
+      paymentMethod: 'COD',
       shippingAddress,
     });
 
@@ -234,5 +242,302 @@ export const createCodOrder = async (req, res) => {
   } catch (err) {
     console.error('COD order creation error:', err?.message || err);
     return res.status(500).json({ error: err.message || 'Failed to create COD order' });
+  }
+};
+
+/**
+ * PayU Payment Gateway Integration
+ */
+export const initiatePayuPayment = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+
+    const key = process.env.PAYU_KEY || 'rgt1q1';
+    const salt = process.env.PAYU_SALT || 'ZhXv2CWaOELwsdjOb6L486lIlmfHPAbI';
+    const payuEnv = process.env.PAYU_ENV || 'production';
+    const action = payuEnv === 'test' 
+      ? 'https://test.payu.in/_payment' 
+      : 'https://secure.payu.in/_payment';
+
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart || !Array.isArray(cart.items) || cart.items.length === 0) {
+      return res.status(400).json({ error: 'Cart is empty' });
+    }
+
+    // Populate products from unified collection
+    const items = await Promise.all(
+      cart.items.map(async (i) => {
+        const product = await findProductById(i.product);
+        if (!product) {
+          throw new Error(`Product ${i.product} not found`);
+        }
+        
+        const base = parseRupeeToNumber(
+          product.price ||
+          product.mrp ||
+          product.MRP ||
+          product.get?.('MRP') ||
+          product._doc?.['MRP'] ||
+          0
+        );
+        
+        return { 
+          product: product._id, 
+          quantity: i.quantity, 
+          price: base,
+          size: i.size || undefined
+        };
+      })
+    );
+    
+    const amountNum = items.reduce((sum, it) => sum + (it.price * it.quantity), 0);
+    const amount = amountNum.toFixed(2);
+
+    // Load user's current address to snapshot into the order
+    let shippingAddress = null;
+    let userPhone = '';
+    let userName = '';
+    let userEmail = '';
+
+    try {
+      const addr = await Address.findOne({ userId });
+      if (addr) {
+        const { fullName, mobileNumber, pincode, locality, address, city, state, landmark, alternatePhone, addressType } = addr;
+        shippingAddress = { fullName, mobileNumber, pincode, locality, address, city, state, landmark, alternatePhone, addressType };
+        userName = fullName || '';
+        userPhone = mobileNumber || '';
+      }
+    } catch (err) {
+      console.error('Error loading address:', err);
+    }
+
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        if (!userName) userName = user.name || '';
+        if (!userPhone) userPhone = user.phone || user.mobile || '';
+        userEmail = user.email || '';
+      }
+    } catch {}
+
+    if (!userName) userName = 'Customer';
+    if (!userPhone) userPhone = '9999999999';
+    if (!userEmail) userEmail = 'customer@buynest.shop';
+
+    const txnid = 'BN_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const productinfo = 'BuyNest Order';
+
+    // Create pending order
+    const order = await Order.create({
+      user: userId,
+      items,
+      amount: amountNum,
+      currency: 'INR',
+      status: 'created',
+      paymentMethod: 'PayU',
+      payuTxnId: txnid,
+      shippingAddress,
+    });
+
+    const backendUrl = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? 'https://buynest.shop' : `http://localhost:${process.env.PORT || 5001}`);
+    const surl = `${backendUrl}/api/payment/payu/response`;
+    const furl = `${backendUrl}/api/payment/payu/response`;
+
+    const udf1 = userId.toString();
+    const udf2 = order._id.toString();
+    const udf3 = '';
+    const udf4 = '';
+    const udf5 = '';
+
+    // Formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||salt)
+    const hashString = `${key}|${txnid}|${amount}|${productinfo}|${userName}|${userEmail}|${udf1}|${udf2}|${udf3}|${udf4}|${udf5}||||||${salt}`;
+    const hash = crypto.createHash('sha512').update(hashString).digest('hex');
+
+    return res.json({
+      success: true,
+      action,
+      params: {
+        key,
+        txnid,
+        amount,
+        productinfo,
+        firstname: userName,
+        email: userEmail,
+        phone: userPhone,
+        surl,
+        furl,
+        hash,
+        udf1,
+        udf2,
+        udf3,
+        udf4,
+        udf5,
+      },
+    });
+  } catch (err) {
+    console.error('PayU initiate error:', err);
+    return res.status(500).json({ error: err.message || 'Failed to initiate PayU payment' });
+  }
+};
+
+const renderAutoRedirectHtml = (redirectUrl, message = 'Payment Processing') => `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0;url=${redirectUrl}">
+  <title>BuyNest - Payment Status</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #fdf2f8;
+      color: #1f2937;
+    }
+    .card {
+      background: #ffffff;
+      padding: 32px 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+    }
+    .spinner {
+      border: 4px solid #fce7f3;
+      border-top: 4px solid #ec4899;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    h2 { font-size: 18px; margin: 0 0 8px; color: #111827; }
+    p { font-size: 14px; color: #6b7280; margin: 0 0 16px; }
+    a { color: #ec4899; text-decoration: none; font-weight: 600; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h2>${message}</h2>
+    <p>Redirecting you to BuyNest, please wait...</p>
+    <a href="${redirectUrl}">Click here if not redirected automatically</a>
+  </div>
+  <script>
+    setTimeout(function() {
+      window.location.replace("${redirectUrl}");
+    }, 100);
+  </script>
+</body>
+</html>
+`;
+
+/**
+ * Handle PayU Webhook / Redirect Response (surl / furl)
+ */
+export const handlePayuResponse = async (req, res) => {
+  try {
+    const data = req.body || {};
+    console.log('[handlePayuResponse] Data received:', {
+      status: data.status,
+      txnid: data.txnid,
+      amount: data.amount,
+      mihpayid: data.mihpayid,
+      udf1: data.udf1,
+      udf2: data.udf2,
+      error_Message: data.error_Message,
+    });
+
+    const key = process.env.PAYU_KEY || 'rgt1q1';
+    const salt = process.env.PAYU_SALT || 'ZhXv2CWaOELwsdjOb6L486lIlmfHPAbI';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+    const {
+      status,
+      txnid,
+      amount,
+      productinfo,
+      firstname,
+      email,
+      udf1,
+      udf2,
+      udf3,
+      udf4,
+      udf5,
+      additionalCharges,
+      hash,
+      mihpayid,
+    } = data;
+
+    // Verify Reverse Hash
+    let hashString = '';
+    if (additionalCharges) {
+      hashString = `${additionalCharges}|${salt}|${status}||||||${udf5 || ''}|${udf4 || ''}|${udf3 || ''}|${udf2 || ''}|${udf1 || ''}|${email || ''}|${firstname || ''}|${productinfo || ''}|${amount || ''}|${txnid || ''}|${key}`;
+    } else {
+      hashString = `${salt}|${status}||||||${udf5 || ''}|${udf4 || ''}|${udf3 || ''}|${udf2 || ''}|${udf1 || ''}|${email || ''}|${firstname || ''}|${productinfo || ''}|${amount || ''}|${txnid || ''}|${key}`;
+    }
+
+    const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
+
+    if (status === 'success') {
+      const orderId = udf2;
+      let order = null;
+      if (orderId) {
+        order = await Order.findById(orderId);
+      }
+      if (!order && txnid) {
+        order = await Order.findOne({ payuTxnId: txnid });
+      }
+
+      if (order) {
+        order.status = 'paid';
+        order.paymentMethod = 'PayU';
+        order.payuMihpayid = mihpayid || '';
+        order.payuStatus = status;
+        await order.save();
+
+        // Clear Cart
+        if (order.user) {
+          await Cart.updateOne({ user: order.user }, { $set: { items: [] } });
+        }
+
+        const successUrl = `${frontendUrl}/order-success?method=payu&orderId=${order._id}`;
+        res.setHeader('Content-Type', 'text/html');
+        return res.send(renderAutoRedirectHtml(successUrl, 'Payment Successful!'));
+      }
+
+      const defaultSuccessUrl = `${frontendUrl}/order-success?method=payu`;
+      res.setHeader('Content-Type', 'text/html');
+      return res.send(renderAutoRedirectHtml(defaultSuccessUrl, 'Payment Successful!'));
+    } else {
+      const orderId = udf2;
+      if (orderId) {
+        await Order.findByIdAndUpdate(orderId, {
+          status: 'failed',
+          payuStatus: status || 'failed',
+          payuMihpayid: mihpayid || '',
+        });
+      }
+
+      const errorMsg = encodeURIComponent(data.error_Message || data.unmappedstatus || 'Payment failed or cancelled');
+      const failUrl = `${frontendUrl}/address?payment=failed&reason=${errorMsg}`;
+      res.setHeader('Content-Type', 'text/html');
+      return res.send(renderAutoRedirectHtml(failUrl, 'Payment Incomplete or Failed'));
+    }
+  } catch (err) {
+    console.error('[handlePayuResponse] Error:', err);
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const errUrl = `${frontendUrl}/address?payment=failed&reason=InternalServerError`;
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(renderAutoRedirectHtml(errUrl, 'Payment Processing Error'));
   }
 };

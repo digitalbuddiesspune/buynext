@@ -29,7 +29,7 @@ const Navbar = () => {
   const [avatarError, setAvatarError] = useState(false);
   const [headerLogo, setHeaderLogo] = useState({
     url: brandLogo,
-    alt: 'DoorMart',
+    alt: 'BuyNest',
     width: 'auto',
     height: 'auto',
   });
@@ -39,10 +39,10 @@ const Navbar = () => {
       try {
         const { api } = await import('../utils/api');
         const logo = await api.getLogo('header').catch(() => null);
-        if (logo) {
+        if (logo && logo.url) {
           setHeaderLogo({ 
             url: logo.url, 
-            alt: logo.alt || 'DoorMart',
+            alt: logo.alt || 'BuyNest',
             width: logo.width || 'auto',
             height: logo.height || 'auto',
           });
@@ -368,8 +368,8 @@ const Navbar = () => {
             {/* Logo/Brand - Left */}
             <Link to="/" className="flex-shrink-0">
               <img 
-                src={headerLogo.url}
-                alt={headerLogo.alt}
+                src={headerLogo.url || brandLogo}
+                alt={headerLogo.alt || 'BuyNest'}
                 style={{
                   ...(headerLogo.width !== 'auto' && { width: headerLogo.width }),
                   ...(headerLogo.height !== 'auto' && { height: headerLogo.height }),

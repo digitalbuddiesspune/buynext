@@ -16,7 +16,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [footerLogo, setFooterLogo] = useState({
     url: brandLogo,
-    alt: 'DoorMart',
+    alt: 'BuyNest',
     width: 'auto',
     height: 'auto',
   });
@@ -28,10 +28,10 @@ const Footer = () => {
   const loadLogo = async () => {
     try {
       const logo = await api.getLogo('footer').catch(() => null);
-      if (logo) {
+      if (logo && logo.url) {
         setFooterLogo({ 
           url: logo.url, 
-          alt: logo.alt || 'DoorMart',
+          alt: logo.alt || 'BuyNest',
           width: logo.width || 'auto',
           height: logo.height || 'auto',
         });
@@ -135,7 +135,7 @@ const Footer = () => {
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="mb-3 sm:mb-4">
               <img 
-                src={footerLogo.url}
+                src={footerLogo.url || brandLogo}
                 alt={footerLogo.alt || CONTACT_INFO.companyName}
                 style={{
                   ...(footerLogo.width !== 'auto' && { width: footerLogo.width }),

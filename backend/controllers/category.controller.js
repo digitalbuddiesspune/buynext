@@ -23,16 +23,34 @@ function subCategoryQueryParamFromSlug(subSlug) {
 async function countListedProductsForSubcategory(rawMain, rawCategorySlug) {
   const base = buildProductCategoryAndFilter(rawMain, rawCategorySlug, '');
   if (!base.$and?.length) return 0;
-  return Product.countDocuments({
-    $and: [...base.$and, { mrp: { $gt: 0 } }],
+  return Product.collection.countDocuments({
+    $and: [
+      ...base.$and,
+      {
+        $or: [
+          { mrp: { $gt: 0 } },
+          { MRP: { $ne: null, $exists: true } },
+          { Price: { $ne: null, $exists: true } },
+        ],
+      },
+    ],
   });
 }
 
 async function countListedProductsForMainOnly(rawMain) {
   const base = buildProductCategoryAndFilter(rawMain, '', '');
   if (!base.$and?.length) return 0;
-  return Product.countDocuments({
-    $and: [...base.$and, { mrp: { $gt: 0 } }],
+  return Product.collection.countDocuments({
+    $and: [
+      ...base.$and,
+      {
+        $or: [
+          { mrp: { $gt: 0 } },
+          { MRP: { $ne: null, $exists: true } },
+          { Price: { $ne: null, $exists: true } },
+        ],
+      },
+    ],
   });
 }
 

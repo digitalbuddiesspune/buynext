@@ -17,7 +17,7 @@ export async function getLogoByType(req, res) {
     const logo = await Logo.findOne({ type }).lean();
     
     if (!logo) {
-      return res.status(404).json({ message: 'Logo not found' });
+      return res.json({ type, url: null });
     }
     
     return res.json(logo);

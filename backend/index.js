@@ -23,6 +23,7 @@ import cookieJwtAuth from './middleware/authMiddleware.js';
 
 configDotenv();
 
+console.log('Using MongoDB URI DB:', (process.env.MONGODB_URI || '').split('/').pop()?.split('?')[0]);
 console.log(
   'Razorpay env loaded:',
   Boolean(process.env.RAZORPAY_KEY_ID),

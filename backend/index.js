@@ -39,6 +39,8 @@ server.set('trust proxy', 1);
 const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 const allowedOrigins = new Set([
   frontendUrl,
+  'https://www.buynestventures.shop',
+  'https://buynestventures.shop',
   'https://www.buynest.shop',
   'https://buynest.shop',
   'https://www.doormart.shop',

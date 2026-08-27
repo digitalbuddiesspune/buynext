@@ -45,8 +45,8 @@ const Wishlist = () => {
             Tap the heart on a product to save it here for later.
           </p>
           <Link
-            to="/shop"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg font-semibold text-white bg-[#fb641b] hover:opacity-95 transition-opacity"
+            to="/"
+            className="inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 shadow-md hover:shadow-lg transition-all transform hover:scale-105 active:scale-95"
           >
             Browse products
           </Link>

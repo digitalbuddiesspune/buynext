@@ -37,16 +37,18 @@ const Wishlist = () => {
 
   if (!wishlistItems.length) {
     return (
-      <div className="min-h-[60vh] bg-white px-4">
-        <div className="max-w-6xl mx-auto py-10 text-center">
-          <img src={placeholders.wishlist} alt="Wishlist empty" className="w-full max-w-md mx-auto mb-6 object-contain" />
+      <div className="min-h-[60vh] bg-white px-4 flex items-center justify-center">
+        <div className="max-w-md mx-auto py-12 text-center">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-pink-50 flex items-center justify-center text-pink-500 shadow-sm border border-pink-100">
+            <FaHeart className="w-9 h-9" />
+          </div>
           <h2 className="text-2xl font-bold text-black mb-2">Your wishlist is empty</h2>
-          <p className="text-black/70 mb-6">
-            Tap the heart on a product to save it here for later.
+          <p className="text-gray-600 mb-6 text-sm sm:text-base">
+            Explore our cosmetics and beauty collection and tap the heart icon on any product to save it here.
           </p>
           <Link
             to="/"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 shadow-md hover:shadow-lg transition-all transform hover:scale-105 active:scale-95"
+            className="inline-flex items-center justify-center px-8 py-3.5 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 shadow-md hover:shadow-lg transition-all transform hover:scale-105 active:scale-95"
           >
             Browse products
           </Link>

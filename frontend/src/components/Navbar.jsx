@@ -366,19 +366,11 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             {/* Logo/Brand - Left */}
-            <Link to="/" className="flex-shrink-0">
+            <Link to="/" className="flex-shrink-0 flex items-center py-1">
               <img 
                 src={headerLogo.url || brandLogo}
                 alt={headerLogo.alt || 'BuyNest'}
-                style={{
-                  ...(headerLogo.width !== 'auto' && { width: headerLogo.width }),
-                  ...(headerLogo.height !== 'auto' && { height: headerLogo.height }),
-                  maxWidth: '90%',
-                  objectFit: 'contain',
-                }}
-                className={headerLogo.width === 'auto' && headerLogo.height === 'auto' 
-                  ? "h-20 sm:h-10 md:h-12 lg:h-24 w-auto object-contain" 
-                  : "object-contain"}
+                className="h-8 sm:h-9 md:h-10 lg:h-11 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[190px] lg:max-w-[210px] object-contain transition-all duration-200"
                 onError={(e) => {
                   e.target.src = brandLogo;
                 }}

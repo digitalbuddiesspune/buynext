@@ -137,15 +137,7 @@ const Footer = () => {
               <img 
                 src={footerLogo.url || brandLogo}
                 alt={footerLogo.alt || CONTACT_INFO.companyName}
-                style={{
-                  ...(footerLogo.width !== 'auto' && { width: footerLogo.width }),
-                  ...(footerLogo.height !== 'auto' && { height: footerLogo.height }),
-                  maxWidth: '100%',
-                  objectFit: 'contain',
-                }}
-                className={footerLogo.width === 'auto' && footerLogo.height === 'auto' 
-                  ? "h-36 sm:h-44 w-auto object-contain mb-4" 
-                  : "object-contain mb-4"}
+                className="h-10 sm:h-12 w-auto max-w-[180px] sm:max-w-[220px] object-contain mb-3"
                 onError={(e) => {
                   e.target.src = brandLogo;
                 }}

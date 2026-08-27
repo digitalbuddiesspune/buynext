@@ -124,36 +124,24 @@ export const getAllCategories = async (req, res) => {
  */
 export const getNavCategoriesWithProducts = async (req, res) => {
   try {
-    const categories = [];
+    const main = navCategoryTree[0]; // Beauty & Hygiene
+    const mainSlug = slugify(main.name);
+    const rawMain = mainCategoryQueryParamFromSlug(mainSlug);
 
-    for (const main of navCategoryTree) {
-      const mainSlug = slugify(main.name);
-      const rawMain = mainCategoryQueryParamFromSlug(mainSlug);
+    const subResults = await Promise.all(
+      main.subcategories.map(async (sub) => {
+        const subSlug = slugify(sub.name);
+        const rawCategory = subCategoryQueryParamFromSlug(subSlug);
+        const count = await countListedProductsForSubcategory(rawMain, rawCategory);
+        if (count < 1) return null;
+        return {
+          name: sub.name,
+          path: `/category/${mainSlug}/${subSlug}`,
+        };
+      })
+    );
 
-      const subResults = await Promise.all(
-        main.subcategories.map(async (sub) => {
-          const subSlug = slugify(sub.name);
-          const rawCategory = subCategoryQueryParamFromSlug(subSlug);
-          const count = await countListedProductsForSubcategory(rawMain, rawCategory);
-          if (count < 1) return null;
-          return {
-            name: sub.name,
-            path: `/category/${mainSlug}/${subSlug}`,
-          };
-        })
-      );
-
-      const subcategories = subResults.filter(Boolean);
-      const mainOnlyCount = await countListedProductsForMainOnly(rawMain);
-      if (subcategories.length === 0 && mainOnlyCount === 0) continue;
-
-      categories.push({
-        name: main.name,
-        path: `/category/${mainSlug}`,
-        subcategories,
-      });
-    }
-
+    const categories = subResults.filter(Boolean);
     return res.json({ categories });
   } catch (err) {
     return res.status(500).json({ message: 'Failed to build nav categories', error: err.message });

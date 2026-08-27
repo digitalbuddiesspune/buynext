@@ -4,6 +4,9 @@ import MobileBottomNav from '../components/MobileBottomNav';
 import HeroSlider from '../components/HeroSlider';
 import DoorMartSections from '../components/TickNTrackSections';
 import ScrollToTop from '../components/ScrollToTop';
+import heroBanner1 from '../assets/hero banner 1.png';
+import heroBanner3 from '../assets/herobanner3.png';
+import heroBanner4 from '../assets/herobanner4.png';
 
 const Home = () => {
   return (
@@ -12,23 +15,23 @@ const Home = () => {
       <HeroSlider
         slides={[
           {
-            desktop: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774422260/Red_and_Green_Modern_Beverage_Drink_Instagram_Post_1080_x_1080_px_1920_x_600_px_peybb9.png',
-            alt: 'DoorMart - Premium Products Collection',
+            desktop: heroBanner1,
+            alt: 'BuyNest - Beauty & Hygiene Collection',
           },
           {
             desktop: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774422272/Untitled_1920_x_600_px_16_qkdbcw.png',
-            alt: 'Festive Season Offer - DoorMart',
+            alt: 'Festive Season Offer - BuyNest',
           },
           {
-            desktop: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774422686/Banner_Grocery_Delivery_Fresh_Organic_1920_x_600_px_hxivu9.png',
-            alt: 'Festive Season Offer - DoorMart',
+            desktop: heroBanner3,
+            alt: 'Festive Season Offer - BuyNest',
           },
           {
-            desktop: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774422896/Yellow_Fast_Food_Fest_Website_Banner_1920_x_600_px_bbseqi.png',
-            alt: 'Festive Season Offer - DoorMart',
+            desktop: heroBanner4,
+            alt: 'Festive Season Offer - BuyNest',
           },
         ]}
-        mobileSrc="https://res.cloudinary.com/dzd47mpdo/image/upload/v1774420718/Red_and_Green_Modern_Beverage_Drink_Instagram_Post_1080_x_1080_px_gsv2vj.png"
+        mobileSrc={heroBanner1}
       />
 
       {/* DoorMart Sections */}

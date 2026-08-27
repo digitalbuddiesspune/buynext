@@ -364,13 +364,13 @@ const Navbar = () => {
       {/* Bottom Bar - Clean white background with Logo, Navigation, and Icons */}
       <div className="w-full">
         <div className="max-w-7xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
             {/* Logo/Brand - Left */}
             <Link to="/" className="flex-shrink-0 flex items-center py-1">
               <img 
                 src={headerLogo.url || brandLogo}
                 alt={headerLogo.alt || 'BuyNest'}
-                className="h-8 sm:h-9 md:h-10 lg:h-11 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[190px] lg:max-w-[210px] object-contain transition-all duration-200"
+                className="h-7 sm:h-8 md:h-9 lg:h-10 w-auto max-w-[110px] sm:max-w-[140px] md:max-w-[160px] lg:max-w-[185px] object-contain transition-all duration-200"
                 onError={(e) => {
                   e.target.src = brandLogo;
                 }}
@@ -378,121 +378,31 @@ const Navbar = () => {
             </Link>
 
             {/* Navigation Menu - Center (Desktop) with Categories */}
-            <div className="hidden md:flex items-center justify-center flex-1 gap-1.5 lg:gap-2" ref={categoryRef}>
-              {categories.map((category) => (
-                <div
-                  key={category.name}
-                  className="relative group"
-                  onMouseEnter={() => {
-                    cancelCategoryMenuClose();
-                    if (
-                      hoverOpensDropdown.has(category.name) &&
-                      category.subcategories &&
-                      category.subcategories.length > 0
-                    ) {
-                      setActiveCategory(category.name);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    if (!hoverOpensDropdown.has(category.name)) return;
-                    scheduleCategoryMenuClose(category.name);
-                  }}
-                >
-                  <div
-                    className={`flex items-center font-medium text-[13px] lg:text-sm tracking-normal transition-all duration-200 cursor-pointer whitespace-nowrap px-3 py-1.5 rounded-full hover:bg-gray-100 active:bg-gray-100 touch-manipulation text-gray-700 hover:text-black ${
-                      activeCategory === category.name ? 'bg-gray-900 text-white hover:bg-gray-900 hover:text-white' : ''
+            <div className="hidden md:flex items-center justify-center flex-1 gap-1 lg:gap-1.5 xl:gap-2 overflow-x-auto hide-scrollbar py-1 px-1" ref={categoryRef}>
+              {categories.map((category) => {
+                const isActive = location.pathname === category.path;
+                return (
+                  <button
+                    key={category.name}
+                    type="button"
+                    className={`flex items-center font-medium text-[11px] lg:text-[12.5px] xl:text-[13px] tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap px-2 sm:px-2.5 lg:px-3 py-1.5 rounded-full touch-manipulation shrink-0 ${
+                      isActive
+                        ? 'bg-gray-900 text-white shadow-sm font-semibold'
+                        : 'text-gray-700 hover:text-black hover:bg-gray-100 active:bg-gray-200'
                     }`}
                     onClick={() => {
-                      // If category has subcategories, toggle dropdown; otherwise navigate directly
-                      if (category.subcategories && category.subcategories.length > 0) {
-                        setActiveCategory(activeCategory === category.name ? null : category.name);
-                      } else {
-                        navigate(category.path);
-                      }
+                      navigate(category.path);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
                   >
                     <span className="whitespace-nowrap">{category.name}</span>
-                    {category.subcategories &&
-                      category.subcategories.length > 0 &&
-                      !hideCategoryChevron.has(category.name) && (
-                        <svg
-                          className={`w-4 h-4 ml-1.5 flex-shrink-0 transition-transform duration-300 ${
-                            activeCategory === category.name ? 'rotate-180' : ''
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      )}
-                  </div>
-
-                  {/* Simple Attractive Dropdown */}
-                  {activeCategory === category.name && category.subcategories && (
-                    <div
-                      className="absolute left-1/2 -translate-x-1/2 top-full z-50 pt-2 sm:pt-2.5 px-6 -mx-6 animate-in fade-in slide-in-from-top-2 duration-300"
-                      onMouseEnter={cancelCategoryMenuClose}
-                    >
-                      {/* top-full + padding (not margin) keeps pointer inside one hover target while moving from label to menu */}
-                      <div className="bg-white/95 backdrop-blur rounded-2xl shadow-[0_18px_45px_rgba(2,6,23,0.16)] ring-1 ring-gray-200/80 border border-gray-100 overflow-hidden w-60 sm:w-72 min-w-[220px] sm:min-w-[250px] mx-auto">
-                        {/* Header */}
-                        <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                          <button
-                            type="button"
-                            className="w-full text-left block px-4 sm:px-5 py-3 text-xs sm:text-sm font-semibold transition-colors duration-150 flex items-center gap-2 group touch-manipulation active:bg-gray-100 hover:bg-gray-100 text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setActiveCategory(null);
-                              navigate(category.path);
-                            }}
-                          >
-                            <span className="tracking-wide">All {category.name}</span>
-                            <svg className="w-4 h-4 ml-auto text-gray-500 group-hover:text-gray-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                        </div>
-                        
-                        {/* Subcategories */}
-                        <div className="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto custom-scrollbar py-1.5 sm:py-2">
-                          {category.subcategories.map((subcategory) => (
-                            <button
-                              key={subcategory.name}
-                              type="button"
-                              className="w-full text-left flex items-center justify-between gap-3 px-4 sm:px-5 py-2.5 sm:py-3 text-sm transition-all duration-150 hover:bg-gray-50 active:bg-gray-100 group touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setActiveCategory(null);
-                                navigate(subcategory.path);
-                              }}
-                            >
-                              <span className="w-1.5 h-1.5 rounded-full bg-gray-300 group-hover:bg-gray-700 transition-colors"></span>
-                              <span className="font-medium text-gray-900 flex-1">
-                                {subcategory.name}
-                              </span>
-                              <svg
-                                className="w-4 h-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-150 text-gray-400 group-hover:text-gray-700 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                  </button>
+                );
+              })}
             </div>
 
             {/* Icons - Right (Search, Cart on Mobile; All icons on Desktop) */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-2.5 ml-auto md:ml-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-2.5 flex-shrink-0 ml-auto md:ml-0">
               {/* Search Icon - Always Visible */}
               <div className="relative" ref={searchWrapRefDesktop}>
                 <button
@@ -655,10 +565,10 @@ const Navbar = () => {
           <div id="mobile-menu" className="md:hidden py-4 sm:py-6 border-t border-gray-200 bg-white shadow-lg relative z-[70] max-h-[calc(100vh-3.5rem)] overflow-y-auto">
             {/* Mobile Navigation Links - Grid */}
             <nav className="px-3 sm:px-4">
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-3 gap-2">
                 <Link
                   to="/"
-                  className="bg-white border border-gray-300 rounded-lg py-4 sm:py-5 px-3 sm:px-4 text-center font-bold text-xs sm:text-sm uppercase text-black hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation shadow-sm"
+                  className="bg-white border border-gray-300 rounded-lg py-2.5 px-2 text-center font-bold text-xs uppercase text-black hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation shadow-sm"
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     window.scrollTo(0, 0);
@@ -668,7 +578,7 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/about"
-                  className="bg-white border border-gray-300 rounded-lg py-4 sm:py-5 px-3 sm:px-4 text-center font-bold text-xs sm:text-sm uppercase text-black hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation shadow-sm"
+                  className="bg-white border border-gray-300 rounded-lg py-2.5 px-2 text-center font-bold text-xs uppercase text-black hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation shadow-sm"
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     window.scrollTo(0, 0);
@@ -678,7 +588,7 @@ const Navbar = () => {
                 </Link>
                 <Link
                   to="/contact"
-                  className="bg-white border border-gray-300 rounded-lg py-4 sm:py-5 px-3 sm:px-4 text-center font-bold text-xs sm:text-sm uppercase text-black hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation shadow-sm col-span-2"
+                  className="bg-white border border-gray-300 rounded-lg py-2.5 px-2 text-center font-bold text-xs uppercase text-black hover:bg-gray-50 active:bg-gray-100 transition-all duration-200 touch-manipulation shadow-sm"
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     window.scrollTo(0, 0);
@@ -688,6 +598,34 @@ const Navbar = () => {
                 </Link>
               </div>
             </nav>
+
+            {/* Mobile Categories Section */}
+            <div className="mt-4 pt-3 px-3 sm:px-4 border-t border-gray-200">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2 px-1">Beauty & Hygiene Categories</p>
+              <div className="grid grid-cols-2 gap-2">
+                {categories.map((cat) => {
+                  const isActive = location.pathname === cat.path;
+                  return (
+                    <button
+                      key={cat.name}
+                      type="button"
+                      className={`text-left px-3 py-2.5 rounded-lg text-xs font-medium transition-colors duration-150 border touch-manipulation ${
+                        isActive
+                          ? 'bg-gray-900 text-white border-gray-900 font-semibold shadow-sm'
+                          : 'bg-gray-50 text-gray-800 border-gray-200 hover:bg-gray-100 active:bg-gray-200'
+                      }`}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate(cat.path);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* Mobile Menu Icons Section */}
             <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 px-3 sm:px-4 border-t border-gray-200">

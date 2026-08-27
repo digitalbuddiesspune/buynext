@@ -2,6 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTruck, FaAward, FaShieldAlt, FaUndo } from 'react-icons/fa';
 
+import bathAndHandwashImg from '../assets/bath and handwash.png';
+import feminineHygieneImg from '../assets/Feminine Hygiene.png';
+import fragrancesDeosImg from '../assets/Fragrances & Deos.png';
+import haircareImg from '../assets/haircare.png';
+import healthAndMedicineImg from '../assets/Health and.png';
+import makeupImg from '../assets/makeup.png';
+import oralCareImg from '../assets/oral care.png';
+import skinCareImg from '../assets/skin care.png';
+
+import offerZone1Img from '../assets/offerzone1.png';
+import offerZone2Img from '../assets/offerzone2.png';
+import offerZone3Img from '../assets/offerzone3.png';
+import offerZone4Img from '../assets/offerzone4.png';
+
 const DoorMartSections = () => {
   const navigate = useNavigate();
 
@@ -15,64 +29,52 @@ const DoorMartSections = () => {
   const MainCategories = () => {
     const categories = [
       { 
-        name: 'Makeup', 
-        icon: '🚴‍♂️', 
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774528869/a8c0009f-b9a6-483a-aa83-16cdcc6d1e01.png', 
-        path: '/category/beauty-and-hygiene/makeup' 
-      },
-      { 
-        name: 'Energy & Soft Drinks', 
-        icon: '🚛', 
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774432694/c19b217b-7f16-4b62-9029-cd527b7c1b17.png', 
-        path: '/category/beverages/energy-and-soft-drinks' 
-      },
-      { 
         name: 'Bath & Hand Wash', 
-        icon: '🚙', 
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774432921/06cf0047-6bdd-4f41-8f50-0ab1b54fce56.png',
+        icon: '🧼', 
+        image: bathAndHandwashImg, 
         path: '/category/beauty-and-hygiene/bath-and-hand-wash' 
       },
       { 
-        name: 'Tea', 
-        icon: '🚜', 
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433003/f03b9c61-41ad-4a20-b503-9bbd9c6c5ce0.png', 
-        path: '/category/beverages/tea' 
-      },
-      { 
-        name: "Men's Grooming", 
-        icon: '🏎️', 
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433251/c82f0fd1-2136-4508-aeb1-1d85721df43b.png', 
-        path: '/category/beauty-and-hygiene/mens-grooming' 
-      },
-      { 
-        name: 'Hair Care', 
-        icon: '🔥', 
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433102/9abba838-a920-4a7d-a0ff-47ec24bbbc9e.png', 
-        path: '/category/beauty-and-hygiene/hair-care' 
+        name: 'Feminine Hygiene', 
+        icon: '🌺', 
+        image: feminineHygieneImg, 
+        path: '/category/beauty-and-hygiene/feminine-hygiene' 
       },
       { 
         name: 'Fragrances & Deos', 
-        icon: '💫', 
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433220/8323916c-168e-4dec-9d82-3d8546f016c1.png', 
+        icon: '🌸', 
+        image: fragrancesDeosImg, 
         path: '/category/beauty-and-hygiene/fragrances-and-deos' 
       },
-      {
-        name: 'Sports & Fitness',
-        icon: '🏃‍♂️',
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433316/343306bf-6e49-4e96-ab4a-cc415586a0bf.png',
-        path: '/category/cleaning-and-household/sports-and-fitness'
+      { 
+        name: 'Hair Care', 
+        icon: '💇‍♀️', 
+        image: haircareImg, 
+        path: '/category/beauty-and-hygiene/hair-care' 
       },
       {
-        name: 'Toys & Games',
-        icon: '🧸',
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433721/67856f20-b70f-4712-8161-b765d63f2e0f.png',
-        path: '/category/cleaning-and-household/toys-and-games'
+        name: 'Health & Medicine',
+        icon: '💊',
+        image: healthAndMedicineImg,
+        path: '/category/beauty-and-hygiene/health-and-medicine'
+      },
+      { 
+        name: 'Makeup', 
+        icon: '💄', 
+        image: makeupImg, 
+        path: '/category/beauty-and-hygiene/makeup' 
       },
       {
-        name: 'Bins & Bathroom Ware',
-        icon: '🧺',
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433767/2ddf1c7c-8b08-49b8-98e9-7966fbdd95cc.png',
-        path: '/category/cleaning-and-household/bins-and-bathroom-ware'
+        name: 'Oral Care',
+        icon: '🪥',
+        image: oralCareImg,
+        path: '/category/beauty-and-hygiene/oral-care'
+      },
+      { 
+        name: 'Skin Care', 
+        icon: '✨', 
+        image: skinCareImg, 
+        path: '/category/beauty-and-hygiene/skin-care' 
       }
     ];
 
@@ -117,19 +119,19 @@ const DoorMartSections = () => {
                 className="group cursor-pointer"
                 onClick={() => handleCategoryClick(category.path)}
               >
-                <div className="relative aspect-square bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:scale-105">
-                  <div className="absolute inset-0 bg-gray-100">
+                <div className="relative aspect-square bg-white rounded-lg sm:rounded-xl border border-gray-200 hover:border-gray-400 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:scale-105">
+                  <div className="absolute inset-0 bg-gray-50">
                     <img
                       src={category.image}
                       alt={category.name}
-                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/200x200/1F2937/FFFFFF?text=Car';
+                        e.target.src = 'https://via.placeholder.com/300x300/1F2937/FFFFFF?text=Category';
                       }}
                     />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <h3 className="text-center mt-3 text-xs sm:text-sm md:text-base font-semibold text-gray-900 group-hover:text-[#02050B] transition-colors duration-300">
                   {category.name}
@@ -149,22 +151,22 @@ const DoorMartSections = () => {
     const offers = [
       {
         id: 1,
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774421048/58017a7a-e5b0-451f-a5e3-4cfeaf120849.png',
-        path: '/category/baby-care'
+        image: offerZone1Img,
+        path: '/category/beauty-and-hygiene'
       },
       {
         id: 2,
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774421025/94c73c6e-e976-429e-962a-995e249ce108.png',
-        path: '/category/beverages/energy-and-soft-drinks'
+        image: offerZone2Img,
+        path: '/category/beauty-and-hygiene/skin-care'
       },
       {
         id: 3,
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774421010/cad31fe6-8aac-41dd-974d-2fa7f3e615d2.png',
-        path: '/category/snacks-and-branded-foods/biscuits-and-cookies'
+        image: offerZone3Img,
+        path: '/category/beauty-and-hygiene/makeup'
       },
       {
         id: 4,
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774523448/b5bc93ec-e125-4e6f-9415-043b96835fbe.png',
+        image: offerZone4Img,
         path: '/category/beauty-and-hygiene'
       }
     ];
@@ -267,34 +269,34 @@ const DoorMartSections = () => {
     const productData = [
       {
         image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774521094/0dbfe300-b764-4e49-a966-fcf5a9df5b7b.png',
-        name: 'Beauty & Hygiene',
-        path: '/category/beauty-and-hygiene',
-        description: 'Skin, hair, bath and personal care essentials.',
-        cta: 'Shop Beauty',
+        name: 'Skin Care',
+        path: '/category/beauty-and-hygiene/skin-care',
+        description: 'Moisturizers, cleansers, serums and daily skin essentials.',
+        cta: 'Shop Skin Care',
         bgTint: 'bg-rose-50'
       },
       {
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774521771/70ff75c5-db6d-4658-97f8-53d7853c751a.png',
-        name: 'Beverages',
-        path: '/category/beverages',
-        description: 'Tea, coffee, juices and refreshing drinks.',
-        cta: 'Shop Drinks',
+        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774528869/a8c0009f-b9a6-483a-aa83-16cdcc6d1e01.png',
+        name: 'Makeup',
+        path: '/category/beauty-and-hygiene/makeup',
+        description: 'Lips, eyes, face, brushes and makeup kits.',
+        cta: 'Shop Makeup',
         bgTint: 'bg-cyan-50'
       },
       {
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774522325/d5982c91-6ce8-416d-80d9-eeab59e7d7de.png',
-        name: 'Cleaning & Household',
-        path: '/category/cleaning-and-household',
-        description: 'Daily home cleaning and household utility products.',
-        cta: 'Shop Home Care',
+        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433102/9abba838-a920-4a7d-a0ff-47ec24bbbc9e.png',
+        name: 'Hair Care',
+        path: '/category/beauty-and-hygiene/hair-care',
+        description: 'Shampoos, conditioners, hair oils and styling.',
+        cta: 'Shop Hair Care',
         bgTint: 'bg-emerald-50'
       },
       {
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774522493/70425225-2906-4dba-a9a1-9e0b857c7a63.png',
-        name: 'Snacks & Branded Foods',
-        path: '/category/snacks-and-branded-foods',
-        description: 'Biscuits, namkeen, ready-to-eat and more.',
-        cta: 'Shop Snacks',
+        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433220/8323916c-168e-4dec-9d82-3d8546f016c1.png',
+        name: 'Fragrances & Deos',
+        path: '/category/beauty-and-hygiene/fragrances-and-deos',
+        description: 'Body sprays, mists, deodorants and perfumes.',
+        cta: 'Shop Fragrances',
         bgTint: 'bg-amber-50'
       }
     ];

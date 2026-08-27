@@ -62,10 +62,14 @@ const Footer = () => {
   ];
 
   const categories = [
-    { name: 'Beauty & Hygiene', path: '/category/beauty-and-hygiene' },
-    { name: 'Beverages', path: '/category/beverages' },
-    { name: 'Cleaning & Household', path: '/category/cleaning-and-household' },
-    { name: 'Snacks & Branded Foods', path: '/category/snacks-and-branded-foods' },
+    { name: 'Bath & Hand Wash', path: '/category/beauty-and-hygiene/bath-and-hand-wash' },
+    { name: 'Feminine Hygiene', path: '/category/beauty-and-hygiene/feminine-hygiene' },
+    { name: 'Fragrances & Deos', path: '/category/beauty-and-hygiene/fragrances-and-deos' },
+    { name: 'Hair Care', path: '/category/beauty-and-hygiene/hair-care' },
+    { name: 'Health & Medicine', path: '/category/beauty-and-hygiene/health-and-medicine' },
+    { name: 'Makeup', path: '/category/beauty-and-hygiene/makeup' },
+    { name: 'Oral Care', path: '/category/beauty-and-hygiene/oral-care' },
+    { name: 'Skin Care', path: '/category/beauty-and-hygiene/skin-care' },
   ];
 
   const trustFeatures = [

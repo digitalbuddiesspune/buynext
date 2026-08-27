@@ -77,119 +77,34 @@ const MobileHeader = () => {
 
   return (
     <>
-      <div ref={headerRef} className="md:hidden w-full border-t border-gray-200 border-b border-gray-200 shadow-sm relative" style={{ backgroundColor: '#e7dacf', overflow: 'visible' }}>
+      <div ref={headerRef} className="md:hidden w-full border-t border-gray-200 border-b border-gray-200 shadow-sm relative bg-white" style={{ overflow: 'visible' }}>
         {/* Horizontal Scrollable Categories */}
-        <div className="relative px-2 sm:px-3 pt-1.5 sm:pt-2 pb-1 sm:pb-1.5" ref={categoryRef} style={{ overflow: 'visible' }}>
+        <div className="relative px-2 sm:px-3 py-1.5" ref={categoryRef} style={{ overflow: 'visible' }}>
           <div className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto hide-scrollbar" style={{ overflowY: 'visible', scrollBehavior: 'smooth' }}>
-            {categories.map((category) => (
-              <div key={category.name} className="relative group shrink-0" style={{ zIndex: activeCategory === category.name ? 100 : 'auto' }}>
-                <div
-                  className={`flex items-center font-semibold text-[11px] sm:text-sm transition-all duration-200 cursor-pointer whitespace-nowrap px-1.5 sm:px-2 py-1.5 sm:py-2 rounded-lg hover:bg-gray-50 active:bg-gray-100 touch-manipulation ${
-                    activeCategory === category.name ? 'bg-gray-50' : ''
-                  }`}
-                  style={{ color: '#0B1220' }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (category.subcategories && category.subcategories.length > 0) {
-                      setActiveCategory(activeCategory === category.name ? null : category.name);
-                    } else {
+            {categories.map((category) => {
+              const isActive = location.pathname === category.path;
+              return (
+                <div key={category.name} className="relative group shrink-0">
+                  <button
+                    type="button"
+                    className={`flex items-center font-medium text-[11px] sm:text-xs transition-all duration-200 cursor-pointer whitespace-nowrap px-2.5 py-1 rounded-full touch-manipulation ${
+                      isActive ? 'bg-gray-900 text-white font-semibold shadow-sm' : 'text-gray-800 bg-gray-100 active:bg-gray-200'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
                       navigate(category.path);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }
-                  }}
-                >
-                  <span className="whitespace-nowrap">{category.name}</span>
-                  {category.subcategories && category.subcategories.length > 0 && (
-                    <svg
-                      className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ml-1 flex-shrink-0 transition-transform duration-300 ${
-                        activeCategory === category.name ? 'rotate-180' : ''
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      style={{ color: '#000000' }}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  )}
+                    }}
+                  >
+                    <span className="whitespace-nowrap">{category.name}</span>
+                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Dropdown Portal - Render outside scroll container */}
-      {categories.map((category) => (
-        activeCategory === category.name && category.subcategories && category.subcategories.length > 0 && (
-          <div 
-            key={`dropdown-${category.name}`}
-            data-dropdown
-            className="fixed md:hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-300 px-2 sm:px-3"
-            style={{ 
-              top: `${dropdownTop}px`,
-              left: '0',
-              right: '0',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-white rounded-xl shadow-xl border border-pink-200 overflow-hidden max-w-[calc(100vw-1rem)] sm:max-w-[320px] mx-auto">
-                    {/* Header */}
-                    <div className="bg-pink-50 border-b border-pink-200">
-                      <button
-                        type="button"
-                        className="w-full text-left block px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center gap-2 group touch-manipulation active:bg-pink-100"
-                        style={{ color: '#0B1220' }}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setActiveCategory(null);
-                          navigate(category.path);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                      >
-                        <span>All {category.name}</span>
-                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 ml-auto opacity-60 group-hover:opacity-100 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#000000' }}>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
-                    </div>
-                    
-                    {/* Subcategories */}
-                    <div className="max-h-[50vh] overflow-y-auto custom-scrollbar py-1 sm:py-2">
-                      {category.subcategories.map((subcategory) => (
-                        <button
-                          key={subcategory.name}
-                          type="button"
-                          className="w-full text-left block px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm transition-all duration-200 hover:bg-pink-50 active:bg-pink-100 group touch-manipulation"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setActiveCategory(null);
-                            navigate(subcategory.path);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                        >
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-pink-400 group-hover:bg-pink-600 transition-colors"></div>
-                            <span 
-                              className="font-semibold flex-1 tracking-wide"
-                              style={{ color: '#0B1220' }}
-                            >
-                              {subcategory.name}
-                            </span>
-                            <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-0 group-hover:opacity-100 transition-all duration-200 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )
-            ))}
-      
       {/* Custom Styles */}
       <style>{`
         @keyframes fade-in {

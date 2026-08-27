@@ -6,7 +6,7 @@ import { searchProducts } from '../services/api';
 import { placeholders, getProductImage } from '../utils/imagePlaceholder';
 import { navbarCategories } from '../data/categoryTree';
 import { api } from '../utils/api';
-import brandLogo from '../assets/Logo.png';
+import brandLogo from '../assets/buynest.logo.jpeg';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);

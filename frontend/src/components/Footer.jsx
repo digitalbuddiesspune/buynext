@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Facebook, Instagram, Truck, Shield, RotateCcw, HeadphonesIcon, MessageCircle } from 'lucide-react';
 import { api } from '../utils/api';
-import brandLogo from '../assets/Logo.png';
+import brandLogo from '../assets/buynest.logo.jpeg';
 
 /** Static footer contact — not loaded from admin API */
 const CONTACT_INFO = {

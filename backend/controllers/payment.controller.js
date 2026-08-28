@@ -355,11 +355,15 @@ export const initiatePayuPayment = async (req, res) => {
     const curl = `${backendUrl}/api/payment/payu/response`;
 
     const originHeader = req.get('origin') || req.get('referer');
-    let frontendBase = process.env.FRONTEND_URL || 'https://www.buynestventures.shop';
+    let frontendBase = 'https://www.buynestventures.shop';
     if (originHeader) {
       try {
         const u = new URL(originHeader);
-        frontendBase = `${u.protocol}//${u.host}`;
+        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+          frontendBase = `${u.protocol}//${u.host}`;
+        } else {
+          frontendBase = 'https://www.buynestventures.shop';
+        }
       } catch {}
     }
 
@@ -479,9 +483,17 @@ export const handlePayuResponse = async (req, res) => {
 
     const key = process.env.PAYU_KEY || 'rgt1q1';
     const salt = process.env.PAYU_SALT || 'ZhXv2CWaOELwsdjOb6L486lIlmfHPAbI';
-    const frontendUrl = (data.udf3 && data.udf3.startsWith('http')) 
-      ? data.udf3 
-      : (process.env.FRONTEND_URL || 'https://www.buynestventures.shop');
+    let frontendUrl = 'https://www.buynestventures.shop';
+    if (data.udf3 && data.udf3.startsWith('http')) {
+      try {
+        const u = new URL(data.udf3);
+        if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+          frontendUrl = `${u.protocol}//${u.host}`;
+        } else {
+          frontendUrl = 'https://www.buynestventures.shop';
+        }
+      } catch {}
+    }
 
     const {
       status,

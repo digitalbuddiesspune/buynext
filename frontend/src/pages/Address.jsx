@@ -1036,10 +1036,10 @@ export default function AddressForm() {
                 <h4 className="text-black font-semibold mb-2 sm:mb-3 text-xs sm:text-sm">Select Payment Method</h4>
                 <div className="space-y-2">
                   {/* PayU Payment */}
-                  <label className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                  <label className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                     paymentMethod === 'payu' 
-                      ? 'border-pink-500 bg-pink-50/40' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-pink-500 bg-pink-50/50 shadow-sm' 
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}>
                     <input
                       type="radio"
@@ -1047,48 +1047,25 @@ export default function AddressForm() {
                       value="payu"
                       checked={paymentMethod === 'payu'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0"
+                      className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0 accent-pink-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-xs sm:text-sm text-black flex items-center gap-1.5">
-                        <span>PayU Payment Gateway</span>
+                      <div className="font-bold text-xs sm:text-sm text-gray-900 flex items-center gap-1.5">
+                        <span>Pay Online (UPI, Cards, NetBanking)</span>
                         <span className="bg-green-100 text-green-800 text-[10px] font-bold px-1.5 py-0.5 rounded">FAST</span>
                       </div>
-                      <div className="text-xs text-gray-600">UPI (GPay/PhonePe/Paytm), Cards, NetBanking, Wallets</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Instant checkout via GPay, PhonePe, Paytm, Cards & NetBanking</div>
                     </div>
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-pink-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-pink-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
                   </label>
 
-                  {/* Razorpay Payment */}
-                  <label className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'razorpay' 
-                      ? 'border-pink-500 bg-pink-50/40' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="razorpay"
-                      checked={paymentMethod === 'razorpay'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-xs sm:text-sm text-black">Razorpay Online Payment</div>
-                      <div className="text-xs text-gray-600">Pay securely with Razorpay</div>
-                    </div>
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </label>
-                  
                   {/* Cash on Delivery */}
-                  <label className={`flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                  <label className={`flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
                     paymentMethod === 'cod' 
-                      ? 'border-pink-500 bg-pink-50/40' 
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-pink-500 bg-pink-50/50 shadow-sm' 
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
                   }`}>
                     <input
                       type="radio"
@@ -1096,13 +1073,13 @@ export default function AddressForm() {
                       value="cod"
                       checked={paymentMethod === 'cod'}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0"
+                      className="w-4 h-4 text-pink-500 focus:ring-pink-500 flex-shrink-0 accent-pink-500"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-xs sm:text-sm text-black">Cash on Delivery (COD)</div>
-                      <div className="text-xs text-gray-600">Pay cash or UPI when you receive your order</div>
+                      <div className="font-bold text-xs sm:text-sm text-gray-900">Cash on Delivery (COD)</div>
+                      <div className="text-xs text-gray-500 mt-0.5">Pay cash or UPI upon delivery</div>
                     </div>
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
                   </label>

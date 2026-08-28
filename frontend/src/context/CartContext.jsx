@@ -22,39 +22,17 @@ export const CartProvider = ({ children }) => {
 
     const items = data?.items || [];
     return items.map((i) => {
-      const p = i.product || {};
+      const p = (typeof i.product === 'object' && i.product !== null) ? i.product : {};
+      const productId = p._id || p.id || i.product || i.id;
+      const title = p.title || p.name || p['SKU Name'] || p['Product Name'] || p.skuName || i.name || 'Product';
       
-      // Debug: Log product structure
-      console.log('Cart product mapping:', {
-        productId: p._id || p.id,
-        productTitle: p.title,
-        hasImages: !!p.images,
-        imagesType: typeof p.images,
-        imagesValue: p.images,
-        hasImage: !!p.image,
-        imageValue: p.image,
-        productKeys: Object.keys(p)
-      });
+      const normalizedMrp = typeof p.mrp === 'number' ? p.mrp : parseRupeeToNumber(p['MRP'] || p.mrp);
+      const price = typeof p.price === 'number' ? p.price : (normalizedMrp > 0 ? Math.round(normalizedMrp) : (typeof i.price === 'number' ? i.price : 0));
       
-      const normalizedMrp = typeof p.mrp === 'number' ? p.mrp : parseRupeeToNumber(p.MRP);
-      // No % discount: use server `price` if present, otherwise plain MRP.
-      const price = typeof p.price === 'number' ? p.price : normalizedMrp > 0 ? Math.round(normalizedMrp) : 0;
-      
-      // Get image URL - prefer image1, fallback to image2, image3, or legacy image field
       let imageUrl = null;
-      
-      // Check images object format: { image1: "url", image2: "url" }
       if (p.images && typeof p.images === 'object' && !Array.isArray(p.images)) {
-        imageUrl = p.images.image1 || p.images.image2 || p.images.image3 || null;
-        // Clean up the URL - remove any whitespace
-        if (imageUrl && typeof imageUrl === 'string') {
-          imageUrl = imageUrl.trim();
-          if (imageUrl === '') imageUrl = null;
-        }
-      }
-      
-      // Check images array format: [{ url: "..." }] or ["url1", "url2"]
-      if (!imageUrl && Array.isArray(p.images) && p.images.length > 0) {
+        imageUrl = p.images.image1 || p.images.image2 || p.images.image3 || p.images.url || null;
+      } else if (Array.isArray(p.images) && p.images.length > 0) {
         const firstImg = p.images[0];
         if (typeof firstImg === 'string' && firstImg.trim() !== '') {
           imageUrl = firstImg.trim();
@@ -63,34 +41,30 @@ export const CartProvider = ({ children }) => {
         }
       }
       
-      // Fallback to legacy image field
-      if (!imageUrl && p.image) {
-        if (typeof p.image === 'string' && p.image.trim() !== '') {
-          imageUrl = p.image.trim();
-        }
-      }
+      if (!imageUrl && p['Image Link']) imageUrl = p['Image Link'];
+      if (!imageUrl && p.image) imageUrl = typeof p.image === 'string' ? p.image : p.image?.url;
+      if (!imageUrl && p.imageUrl) imageUrl = p.imageUrl;
+      if (!imageUrl && p.imageLink) imageUrl = p.imageLink;
+      if (!imageUrl && p.sourceData?.imageLink) imageUrl = p.sourceData.imageLink;
+      if (!imageUrl && i.image) imageUrl = typeof i.image === 'string' ? i.image : i.image?.url;
 
-      // Fallback to raw dataset key from Compass imports
-      if (!imageUrl && typeof p['Image Link'] === 'string' && p['Image Link'].trim() !== '') {
-        imageUrl = p['Image Link'].trim();
+      if (imageUrl && typeof imageUrl === 'string') {
+        imageUrl = imageUrl.trim();
       }
-      
-      console.log('Extracted image URL:', { 
-        productId: p._id || p.id, 
-        imageUrl,
-        finalImageUrl: imageUrl || 'NO IMAGE FOUND'
-      });
       
       return {
-        id: p._id || p.id, // used by UI and for remove
-        name: p.title || p.name || p['SKU Name'] || 'Untitled Product',
-        image: imageUrl, // Store the image URL string
+        id: productId,
+        _id: productId,
+        name: title,
+        title: title,
+        image: imageUrl,
+        images: p.images || { image1: imageUrl },
         material: p.product_info?.fabric || p.product_info?.material || p.product_info?.shoeMaterial || p.product_info?.SareeMaterial,
         work: p.product_info?.includedComponents || p.product_info?.IncludedComponents,
         price,
         originalPrice: normalizedMrp || p.originalPrice || price,
         quantity: i.quantity || 1,
-        size: i.size || null, // Include size from cart item
+        size: i.size || null,
       };
     });
   }, []);

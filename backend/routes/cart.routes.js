@@ -17,34 +17,67 @@ const parseRupeeToNumber = (value) => {
 // Helper function to find product in unified collection
 async function findProductById(productId) {
   if (!productId) return null;
-  const idString = productId._id ? productId._id.toString() : (productId.toString ? productId.toString() : productId);
-  return Product.findById(idString);
+  const idString = productId._id ? productId._id.toString() : (productId.toString ? productId.toString() : String(productId));
+  if (!mongoose.isValidObjectId(idString)) return null;
+  return Product.findById(idString).lean();
 }
 
 // Helper function to populate cart items
 async function populateCartItems(items) {
+  if (!Array.isArray(items) || items.length === 0) return [];
+
   return Promise.all(
     items.map(async (item) => {
-      const product = await findProductById(item.product);
-      const productObj = product ? (product.toObject ? product.toObject() : product) : null;
-      if (productObj) {
-        if (!productObj.title && productObj['SKU Name']) {
-          productObj.title = productObj['SKU Name'];
+      const rawItem = item.toObject ? item.toObject() : item;
+      const productId = rawItem.product?._id || rawItem.product;
+      const product = await findProductById(productId);
+
+      if (product) {
+        const title = product.title || product['SKU Name'] || product.name || product['Product Name'] || product.skuName || 'Product';
+        const mrp = typeof product.mrp === 'number' ? product.mrp : parseRupeeToNumber(product['MRP']);
+        const price = typeof product.price === 'number' ? product.price : (mrp || 0);
+
+        let image = null;
+        if (product.images) {
+          if (typeof product.images === 'object' && !Array.isArray(product.images)) {
+            image = product.images.image1 || product.images.image2 || product.images.image3 || null;
+          } else if (Array.isArray(product.images) && product.images.length > 0) {
+            const first = product.images[0];
+            image = typeof first === 'string' ? first : (first?.url || null);
+          }
         }
-        if ((!productObj.mrp || Number.isNaN(Number(productObj.mrp))) && productObj['MRP']) {
-          productObj.mrp = parseRupeeToNumber(productObj['MRP']);
-        }
-        if (!productObj.images) productObj.images = {};
-        if (!productObj.images.image1 && productObj['Image Link']) {
-          productObj.images.image1 = productObj['Image Link'];
-        }
-        if (!productObj.price) {
-          productObj.price = productObj.mrp || parseRupeeToNumber(productObj['MRP']) || 0;
-        }
+        if (!image && product['Image Link']) image = product['Image Link'];
+        if (!image && product.image) image = typeof product.image === 'string' ? product.image : product.image?.url;
+        if (!image && product.imageUrl) image = product.imageUrl;
+        if (!image && product.imageLink) image = product.imageLink;
+        if (!image && product.sourceData?.imageLink) image = product.sourceData.imageLink;
+
+        const imagesObj = {
+          ...(product.images && typeof product.images === 'object' && !Array.isArray(product.images) ? product.images : {}),
+          image1: image || product.images?.image1 || null,
+        };
+
+        return {
+          ...rawItem,
+          price: rawItem.price && rawItem.price > 0 ? rawItem.price : price,
+          product: {
+            ...product,
+            _id: product._id || productId,
+            id: product._id || productId,
+            title,
+            name: title,
+            price,
+            mrp,
+            image,
+            images: imagesObj,
+          },
+        };
       }
+
       return {
-        ...(item.toObject ? item.toObject() : item),
-        product: productObj || item.product,
+        ...rawItem,
+        price: rawItem.price || 0,
+        product: rawItem.product || { _id: productId, title: 'Product' },
       };
     })
   );
@@ -58,21 +91,11 @@ router.get('/', auth, async (req, res) => {
       return res.json({ user: req.userId, items: [] });
     }
 
-    // Manually populate products from all collections
-    const populatedItems = await Promise.all(
-      cart.items.map(async (item) => {
-        const product = await findProductById(item.product);
-        // Convert Mongoose document to plain object to ensure proper serialization
-        const productObj = product ? (product.toObject ? product.toObject() : product) : item.product;
-        return {
-          ...item.toObject(),
-          product: productObj, // Keep original ID if product not found
-        };
-      })
-    );
+    // Manually populate products from unified collection
+    const populatedItems = await populateCartItems(cart.items);
 
     res.json({
-      ...cart.toObject(),
+      ...(cart.toObject ? cart.toObject() : cart),
       items: populatedItems,
     });
   } catch (error) {

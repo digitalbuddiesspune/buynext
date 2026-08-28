@@ -79,45 +79,24 @@ function Cart() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
           <div className="lg:col-span-2 space-y-2.5 sm:space-y-3">
              {cart.map((item) => {
-               // Debug logging
-               console.log('Cart item rendering:', {
-                 id: item.id,
-                 name: item.name,
-                 image: item.image,
-                 imageType: typeof item.image,
-                 hasImage: !!item.image
-               });
-               
-               // Get image URL - handle both string URL and object format
-               let imageUrl = placeholders.productList;
-               if (item.image) {
-                 if (typeof item.image === 'string' && item.image.trim() !== '') {
-                   // Direct URL string
-                   imageUrl = item.image.trim();
-                 } else if (typeof item.image === 'object') {
-                   // Object format - use getProductImage
-                   imageUrl = getProductImage({ images: item.image }, 'image1') || placeholders.productList;
-                 } else {
-                   // Try getProductImage as fallback
-                   imageUrl = getProductImage({ images: { image1: item.image } }, 'image1') || placeholders.productList;
-                 }
+               // Get image URL - robust resolution
+               let imageUrl = item.image;
+               if (!imageUrl || typeof imageUrl !== 'string' || imageUrl.trim() === '') {
+                 imageUrl = getProductImage(item) || placeholders.productList;
                }
                
+               const displayName = item.name || item.title || 'Product';
+               const itemKey = `${item.id || item._id || 'item'}-${item.size || 'default'}`;
+
                return (
-              <div key={item.id} className="bg-white rounded-lg shadow-sm p-2.5 sm:p-3.5 flex flex-col sm:flex-row items-start gap-2.5 sm:gap-3 border border-pink-100 hover:border-pink-300 transition-all">
+              <div key={itemKey} className="bg-white rounded-lg shadow-sm p-2.5 sm:p-3.5 flex flex-col sm:flex-row items-start gap-2.5 sm:gap-3 border border-pink-100 hover:border-pink-300 transition-all">
                 <div className="w-full sm:w-20 md:w-24 h-36 sm:h-20 md:h-24 flex items-center justify-center overflow-hidden rounded-md cursor-pointer border border-pink-100 hover:border-pink-300 transition-all self-center sm:self-start bg-gray-50">
                   <img
                     src={imageUrl}
-                    alt={item.name || 'Product'}
+                    alt={displayName}
                     className="w-full h-full object-contain"
                     onClick={() => navigate(`/product/${item.id}`)}
                     onError={(e) => {
-                      console.error('Cart image error:', {
-                        itemId: item.id,
-                        itemName: item.name,
-                        attemptedUrl: e.target.src,
-                        originalImage: item.image
-                      });
                       e.currentTarget.onerror = null;
                       e.currentTarget.src = placeholders.productList;
                     }}
@@ -131,7 +110,7 @@ function Cart() {
                         className="text-sm sm:text-base font-semibold text-gray-900 cursor-pointer hover:text-[#5c9404] transition-colors mb-1 line-clamp-2"
                         onClick={() => navigate(`/product/${item.id}`)}
                       >
-                        {item.name}
+                        {displayName}
                       </h3>
                       {item.size && (
                         <p className="text-[#5c9404] font-semibold text-xs mb-1">Size: {item.size}</p>

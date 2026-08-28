@@ -3,7 +3,8 @@ import { GST_RATE } from './invoiceConstants';
 export { GST_RATE, FREE_SHIPPING_THRESHOLD, DEFAULT_SHIPPING_CHARGE } from './invoiceConstants';
 
 export function buildAdminInvoicePayload({
-  selectedCustomer,
+  customer,
+  shippingAddress,
   lineItems,
   subtotal,
   gst,
@@ -11,31 +12,29 @@ export function buildAdminInvoicePayload({
   total,
   invoiceDate,
 }) {
-  if (!selectedCustomer) {
-    return { error: 'Please select a customer' };
+  if (!customer?.fullName?.trim()) {
+    return { error: 'Please enter customer name' };
   }
   if (!lineItems?.length) {
     return { error: 'Please add at least one product' };
   }
 
-  const addr = selectedCustomer.address || {};
-  const shippingAddress = {
-    fullName: addr.fullName || selectedCustomer.name,
-    mobileNumber: addr.mobileNumber || selectedCustomer.phone,
-    pincode: addr.pincode,
-    locality: addr.locality,
-    address: addr.address || addr.addressLine1,
-    city: addr.city,
-    state: addr.state,
-    landmark: addr.landmark,
-    alternatePhone: addr.alternatePhone,
-    addressType: addr.addressType,
+  const normalizedAddress = {
+    fullName: customer.fullName.trim(),
+    mobileNumber: customer.phone?.trim() || '',
+    pincode: shippingAddress.pincode?.trim() || '',
+    locality: shippingAddress.locality?.trim() || '',
+    address: shippingAddress.address?.trim() || '',
+    city: shippingAddress.city?.trim() || '',
+    state: shippingAddress.state?.trim() || '',
+    landmark: shippingAddress.landmark?.trim() || '',
   };
 
   const invoiceId = `INV${Date.now().toString().slice(-8)}`;
   const createdAt = invoiceDate
     ? new Date(`${invoiceDate}T12:00:00`).toISOString()
     : new Date().toISOString();
+
   const orderPayload = {
     _id: invoiceId,
     createdAt,
@@ -47,15 +46,15 @@ export function buildAdminInvoicePayload({
       quantity: item.quantity,
       price: item.price,
     })),
-    shippingAddress,
+    shippingAddress: normalizedAddress,
   };
 
   return {
     payload: {
       order: orderPayload,
       user: {
-        name: selectedCustomer.name,
-        email: selectedCustomer.email,
+        name: customer.fullName.trim(),
+        email: customer.email?.trim() || '',
       },
       invoiceNumber: invoiceId,
       totals: {

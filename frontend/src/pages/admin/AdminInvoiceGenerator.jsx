@@ -7,8 +7,6 @@ import {
   FiFileText,
   FiShoppingCart,
   FiMapPin,
-  FiMail,
-  FiPhone,
   FiRefreshCw,
   FiPrinter,
   FiDownload,
@@ -43,14 +41,31 @@ const todayDateInputValue = () => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
 
+const EMPTY_CUSTOMER = {
+  fullName: '',
+  email: '',
+  phone: '',
+};
+
+const EMPTY_ADDRESS = {
+  address: '',
+  locality: '',
+  city: '',
+  state: '',
+  pincode: '',
+  landmark: '',
+};
+
+const inputClass =
+  'w-full px-3 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:border-pink-500 focus:outline-none';
+
 const AdminInvoiceGenerator = () => {
-  const [addresses, setAddresses] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customer, setCustomer] = useState(EMPTY_CUSTOMER);
+  const [shippingAddress, setShippingAddress] = useState(EMPTY_ADDRESS);
 
   const [mainCategory, setMainCategory] = useState('');
   const [subCategory, setSubCategory] = useState('');
@@ -70,11 +85,7 @@ const AdminInvoiceGenerator = () => {
     (async () => {
       try {
         setLoading(true);
-        const [addrData, productData] = await Promise.all([
-          api.admin.listAddresses(),
-          api.admin.listProducts(),
-        ]);
-        setAddresses(Array.isArray(addrData) ? addrData : []);
+        const productData = await api.admin.listProducts();
         setProducts(Array.isArray(productData) ? productData : []);
       } catch (e) {
         setError(e.message || 'Failed to load data');
@@ -84,38 +95,13 @@ const AdminInvoiceGenerator = () => {
     })();
   }, []);
 
-  const customers = useMemo(() => {
-    const map = new Map();
-    addresses.forEach((addr) => {
-      const user = addr.userId;
-      const uid = user?._id || user?.id || user;
-      if (!uid) return;
-      const key = String(uid);
-      if (!map.has(key)) {
-        map.set(key, {
-          id: key,
-          name: user?.name || addr.fullName || 'Customer',
-          email: user?.email || '',
-          phone: addr.mobileNumber || addr.phoneNumber || '',
-          address: addr,
-        });
-      }
-    });
-    return Array.from(map.values()).sort((a, b) =>
-      (a.name || '').localeCompare(b.name || '')
-    );
-  }, [addresses]);
+  const updateCustomer = (field, value) => {
+    setCustomer((prev) => ({ ...prev, [field]: value }));
+  };
 
-  const filteredCustomers = useMemo(() => {
-    const q = customerSearch.trim().toLowerCase();
-    if (!q) return customers;
-    return customers.filter(
-      (c) =>
-        c.name?.toLowerCase().includes(q) ||
-        c.email?.toLowerCase().includes(q) ||
-        c.phone?.includes(q)
-    );
-  }, [customers, customerSearch]);
+  const updateAddress = (field, value) => {
+    setShippingAddress((prev) => ({ ...prev, [field]: value }));
+  };
 
   const subcategories = useMemo(() => {
     const main = categoryTree.find((c) => c.name === mainCategory);
@@ -187,7 +173,8 @@ const AdminInvoiceGenerator = () => {
 
   const getInvoicePayload = () =>
     buildAdminInvoicePayload({
-      selectedCustomer,
+      customer,
+      shippingAddress,
       lineItems,
       subtotal,
       gst,
@@ -259,11 +246,11 @@ const AdminInvoiceGenerator = () => {
     };
   }, [exportKey, exportAction, invoiceData]);
 
-  const canSubmit = selectedCustomer && lineItems.length > 0;
+  const canSubmit = customer.fullName.trim() && lineItems.length > 0;
 
   const resetForm = () => {
-    setSelectedCustomer(null);
-    setCustomerSearch('');
+    setCustomer(EMPTY_CUSTOMER);
+    setShippingAddress(EMPTY_ADDRESS);
     setLineItems([]);
     setMainCategory('');
     setSubCategory('');
@@ -283,17 +270,12 @@ const AdminInvoiceGenerator = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto w-full space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <FiFileText className="text-pink-600" />
-            Invoice Generator
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Select customer, add products, and generate a printable invoice
-          </p>
-        </div>
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <FiFileText className="text-pink-600" />
+          Invoice Generator
+        </h2>
         <button
           type="button"
           onClick={resetForm}
@@ -310,87 +292,141 @@ const AdminInvoiceGenerator = () => {
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto space-y-6">
-          {/* Customer */}
+      <div className="space-y-6">
+          {/* Customer & Address */}
           <section className="bg-white border-2 border-gray-200 rounded-2xl shadow-sm overflow-hidden">
             <div className="px-5 py-4 bg-gradient-to-r from-pink-600 to-rose-600 text-white">
               <h3 className="font-bold flex items-center gap-2">
                 <FiUser className="w-5 h-5" />
-                1. Select Customer
+                1. Customer &amp; Address
               </h3>
             </div>
-            <div className="p-5 space-y-4">
-              <div className="relative">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by name, email, or phone..."
-                  value={customerSearch}
-                  onChange={(e) => setCustomerSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-pink-500 focus:outline-none text-sm"
-                />
-              </div>
-
-              <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-xl divide-y">
-                {filteredCustomers.length === 0 ? (
-                  <p className="p-4 text-sm text-gray-500 text-center">No customers found</p>
-                ) : (
-                  filteredCustomers.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setSelectedCustomer(c)}
-                      className={`w-full text-left p-3 hover:bg-pink-50 transition-colors ${
-                        selectedCustomer?.id === c.id ? 'bg-pink-50 border-l-4 border-pink-600' : ''
-                      }`}
-                    >
-                      <p className="font-semibold text-gray-900 text-sm">{c.name}</p>
-                      <p className="text-xs text-gray-500">{c.email || 'No email'}</p>
-                      <p className="text-xs text-gray-500">{c.phone || 'No phone'}</p>
-                    </button>
-                  ))
-                )}
-              </div>
-
-              {selectedCustomer && (
-                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-sm space-y-2">
-                  <p className="font-bold text-gray-900">Customer Details</p>
-                  <p className="flex items-center gap-2 text-gray-700">
-                    <FiUser className="w-4 h-4 text-pink-600 shrink-0" />
-                    {selectedCustomer.name}
-                  </p>
-                  {selectedCustomer.email && (
-                    <p className="flex items-center gap-2 text-gray-700">
-                      <FiMail className="w-4 h-4 text-pink-600 shrink-0" />
-                      {selectedCustomer.email}
-                    </p>
-                  )}
-                  {selectedCustomer.phone && (
-                    <p className="flex items-center gap-2 text-gray-700">
-                      <FiPhone className="w-4 h-4 text-pink-600 shrink-0" />
-                      {selectedCustomer.phone}
-                    </p>
-                  )}
-                  {selectedCustomer.address && (
-                    <div className="pt-2 border-t border-gray-200">
-                      <p className="flex items-start gap-2 text-gray-700">
-                        <FiMapPin className="w-4 h-4 text-pink-600 shrink-0 mt-0.5" />
-                        <span>
-                          {[
-                            selectedCustomer.address.address || selectedCustomer.address.addressLine1,
-                            selectedCustomer.address.locality,
-                            selectedCustomer.address.city,
-                            selectedCustomer.address.state,
-                            selectedCustomer.address.pincode,
-                          ]
-                            .filter(Boolean)
-                            .join(', ')}
-                        </span>
-                      </p>
-                    </div>
-                  )}
+            <div className="p-5 space-y-6">
+              <div className="space-y-3">
+                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <FiUser className="w-4 h-4 text-pink-600" />
+                  Customer Information
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Full name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Customer name"
+                      value={customer.fullName}
+                      onChange={(e) => updateCustomer('fullName', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="email@example.com"
+                      value={customer.email}
+                      onChange={(e) => updateCustomer('email', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Phone
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="Mobile number"
+                      value={customer.phone}
+                      onChange={(e) => updateCustomer('phone', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
                 </div>
-              )}
+              </div>
+
+              <div className="space-y-3 pt-4 border-t border-gray-100">
+                <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <FiMapPin className="w-4 h-4 text-pink-600" />
+                  Shipping Address
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="House no., street, area"
+                      value={shippingAddress.address}
+                      onChange={(e) => updateAddress('address', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Locality
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Locality"
+                      value={shippingAddress.locality}
+                      onChange={(e) => updateAddress('locality', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Landmark
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Nearby landmark (optional)"
+                      value={shippingAddress.landmark}
+                      onChange={(e) => updateAddress('landmark', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="City"
+                      value={shippingAddress.city}
+                      onChange={(e) => updateAddress('city', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="State"
+                      value={shippingAddress.state}
+                      onChange={(e) => updateAddress('state', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Pincode
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Pincode"
+                      value={shippingAddress.pincode}
+                      onChange={(e) => updateAddress('pincode', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 

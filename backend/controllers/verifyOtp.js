@@ -174,7 +174,6 @@ export async function verifyOtp(req, res) {
       throw new Error('Failed to create or retrieve user profile');
     }
 
-    const jwtSecret = process.env.JWT_SECRET;
     if (!jwtSecret) {
       return res.status(500).json({
         success: false,

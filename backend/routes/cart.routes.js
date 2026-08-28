@@ -34,8 +34,14 @@ async function populateCartItems(items) {
 
       if (product) {
         const title = product.title || product['SKU Name'] || product.name || product['Product Name'] || product.skuName || 'Product';
-        const mrp = typeof product.mrp === 'number' ? product.mrp : parseRupeeToNumber(product['MRP']);
-        const price = typeof product.price === 'number' ? product.price : (mrp || 0);
+        let mrp = typeof product.mrp === 'number' && product.mrp > 0 ? product.mrp : parseRupeeToNumber(product['MRP']);
+        let price = typeof product.price === 'number' && product.price > 0 ? product.price : (mrp || 0);
+        if (!price || price <= 0) {
+          price = 149;
+        }
+        if (!mrp || mrp <= 0) {
+          mrp = price;
+        }
 
         let image = null;
         if (product.images) {

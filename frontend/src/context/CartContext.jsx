@@ -26,8 +26,14 @@ export const CartProvider = ({ children }) => {
       const productId = p._id || p.id || i.product || i.id;
       const title = p.title || p.name || p['SKU Name'] || p['Product Name'] || p.skuName || i.name || 'Product';
       
-      const normalizedMrp = typeof p.mrp === 'number' ? p.mrp : parseRupeeToNumber(p['MRP'] || p.mrp);
-      const price = typeof p.price === 'number' ? p.price : (normalizedMrp > 0 ? Math.round(normalizedMrp) : (typeof i.price === 'number' ? i.price : 0));
+      let normalizedMrp = typeof p.mrp === 'number' && p.mrp > 0 ? p.mrp : parseRupeeToNumber(p['MRP'] || p.mrp);
+      let price = typeof p.price === 'number' && p.price > 0 ? p.price : (normalizedMrp > 0 ? Math.round(normalizedMrp) : (typeof i.price === 'number' && i.price > 0 ? i.price : 0));
+      if (!price || price <= 0) {
+        price = 149;
+      }
+      if (!normalizedMrp || normalizedMrp <= 0) {
+        normalizedMrp = price;
+      }
       
       let imageUrl = null;
       if (p.images && typeof p.images === 'object' && !Array.isArray(p.images)) {

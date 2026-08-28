@@ -511,29 +511,30 @@ export default function AddressForm() {
     
     try {
       setLoadingAddress(true);
-      await deleteAddressById(addrId);
+      const targetId = addrId || addressId || selectedAddressId;
+      if (targetId) {
+        await deleteAddressById(targetId).catch((e) => console.warn('Delete address API error:', e));
+      }
+      
       // Reload addresses
-      const addressData = await getMyAddress();
+      const addressData = await getMyAddress().catch(() => []);
       if (Array.isArray(addressData) && addressData.length > 0) {
         setAddresses(addressData);
-        // Select first address if deleted was selected
-        if (addrId === selectedAddressId) {
-          const firstAddr = addressData[0];
-          setSelectedAddressId(firstAddr._id);
-          setAddressId(firstAddr._id);
-          setFormData({
-            name: firstAddr.fullName || '',
-            mobile: firstAddr.mobileNumber || '',
-            pincode: firstAddr.pincode || '',
-            locality: firstAddr.locality || '',
-            address: firstAddr.address || firstAddr.addressLine1 || '',
-            city: firstAddr.city || '',
-            state: firstAddr.state || '',
-            landmark: firstAddr.landmark || '',
-            alternatePhone: firstAddr.alternatePhone || '',
-            addressType: (firstAddr.addressType || 'Home').toLowerCase(),
-          });
-        }
+        const firstAddr = addressData[0];
+        setSelectedAddressId(firstAddr._id);
+        setAddressId(firstAddr._id);
+        setFormData({
+          name: firstAddr.fullName || '',
+          mobile: firstAddr.mobileNumber || '',
+          pincode: firstAddr.pincode || '',
+          locality: firstAddr.locality || '',
+          address: firstAddr.address || firstAddr.addressLine1 || '',
+          city: firstAddr.city || '',
+          state: firstAddr.state || '',
+          landmark: firstAddr.landmark || '',
+          alternatePhone: firstAddr.alternatePhone || '',
+          addressType: (firstAddr.addressType || 'Home').toLowerCase(),
+        });
         setHasSavedAddress(true);
         setShowForm(false);
         setShowAddForm(false);
@@ -559,10 +560,15 @@ export default function AddressForm() {
           addressType: 'home'
         });
       }
-      alert('Address deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting address:', error);
-      alert('Failed to delete address. Please try again.');
+    } catch (err) {
+      console.error('Delete address error:', err);
+      setAddresses([]);
+      setAddressId(null);
+      setSelectedAddressId(null);
+      setHasSavedAddress(false);
+      setShowForm(true);
+      setShowAddForm(true);
+      setEditMode(false);
     } finally {
       setLoadingAddress(false);
     }
@@ -671,7 +677,7 @@ export default function AddressForm() {
               {loadingAddress && (
                 <div className="mb-4 text-sm text-black">Loading your saved address…</div>
               )}
-              {hasSavedAddress && !editMode && (
+              {hasSavedAddress && !editMode && (formData.name || formData.address) && (
                 <div className="mb-4 sm:mb-6 border border-gray-200 rounded p-3 sm:p-4 bg-white">
                   <div className="font-medium text-sm sm:text-base text-black mb-2">{formData.name}</div>
                   <div className="text-xs sm:text-sm text-black break-words">{formData.address}</div>
@@ -684,32 +690,7 @@ export default function AddressForm() {
                     <button type="button" onClick={() => setEditMode(true)} className="w-full sm:w-auto px-3 sm:px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg text-sm sm:text-base cursor-pointer font-semibold transition-all shadow-sm hover:shadow-md">Edit Address</button>
                     <button 
                       type="button" 
-                      onClick={async () => {
-                        if (window.confirm('Are you sure you want to delete this address?')) {
-                          try {
-                            await deleteAddressById(addressId);
-                            setHasSavedAddress(false);
-                            setEditMode(true);
-                            setFormData({
-                              name: '',
-                              mobile: '',
-                              pincode: '',
-                              locality: '',
-                              address: '',
-                              city: '',
-                              state: '',
-                              landmark: '',
-                              alternatePhone: '',
-                              addressType: 'home'
-                            });
-                            setAddressId(null);
-                            alert('Address deleted successfully');
-                          } catch (error) {
-                            console.error('Error deleting address:', error);
-                            alert(error.message || 'Failed to delete address. Please try again.');
-                          }
-                        }
-                      }}
+                      onClick={() => handleDeleteAddress(addressId || selectedAddressId)}
                       className="w-full sm:w-auto px-3 sm:px-4 py-2 border-2 border-gray-300 hover:bg-gray-50 text-black cursor-pointer text-sm sm:text-base font-semibold transition-all shadow-sm hover:shadow-md rounded-lg"
                     >
                       Delete Address

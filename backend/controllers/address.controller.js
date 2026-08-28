@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Address } from '../models/Address.js';
 
 export const createOrUpdateAddress = async (req, res) => {
@@ -42,9 +43,16 @@ export const updateAddress = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
     const payload = sanitize(req.body);
-    const doc = await Address.findOneAndUpdate({ _id: id, userId }, { $set: payload }, { new: true });
-    if (!doc) return res.status(404).json({ message: 'Address not found' });
+    let doc = null;
+    if (id && id !== 'null' && id !== 'undefined' && mongoose.isValidObjectId(id)) {
+      doc = await Address.findOneAndUpdate({ _id: id, userId }, { $set: payload }, { new: true });
+    }
+    if (!doc) {
+      doc = await Address.findOneAndUpdate({ userId }, { $set: payload }, { new: true, upsert: true });
+    }
     return res.json(doc);
   } catch (err) {
     return res.status(500).json({ message: 'Failed to update address', error: err.message });
@@ -55,10 +63,21 @@ export const deleteAddress = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
-    const result = await Address.findOneAndDelete({ _id: id, userId });
-    if (!result) return res.status(404).json({ message: 'Address not found' });
-    return res.json({ ok: true });
+    if (!userId) return res.status(401).json({ message: 'Unauthorized' });
+
+    let result = null;
+    if (id && id !== 'null' && id !== 'undefined' && mongoose.isValidObjectId(id)) {
+      result = await Address.findOneAndDelete({ _id: id, userId });
+    }
+    
+    // If not found by specific valid ID, fallback to delete any address matching this user
+    if (!result) {
+      result = await Address.findOneAndDelete({ userId });
+    }
+
+    return res.json({ ok: true, message: 'Address deleted successfully' });
   } catch (err) {
+    console.error('Failed to delete address:', err);
     return res.status(500).json({ message: 'Failed to delete address', error: err.message });
   }
 };

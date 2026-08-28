@@ -2,7 +2,7 @@ import { Router } from 'express';
 import mongoose from 'mongoose';
 import auth from '../middleware/auth.js';
 import Cart from '../models/Cart.js';
-import { Product } from '../models/Product.js';
+import { Product } from '../models/product.js';
 
 const router = Router();
 

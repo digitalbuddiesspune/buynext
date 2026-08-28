@@ -1,5 +1,5 @@
 import Order from '../models/Order.js';
-import { Product } from '../models/Product.js';
+import { Product } from '../models/product.js';
 
 const parseRupeeToNumber = (value) => {
   if (typeof value === 'number') return value;

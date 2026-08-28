@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import Cart from '../models/Cart.js';
 import Order from '../models/Order.js';
 import { Address } from '../models/Address.js';
-import { Product } from '../models/Product.js';
+import { Product } from '../models/product.js';
 import { User } from '../models/User.js';
 
 const parseRupeeToNumber = (value) => {

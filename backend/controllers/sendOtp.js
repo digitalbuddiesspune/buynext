@@ -1,11 +1,11 @@
 import crypto from 'crypto';
 import axios from 'axios';
 
-// In-memory OTP store (Use Redis in production)
+// In-memory OTP store (phone -> { hashedOTP, expiry, plainOtp })
 const otpStore = new Map();
 
 /**
- * Generate a 6-digit OTP
+ * Generate a secure 6-digit OTP
  */
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -15,18 +15,16 @@ function generateOTP() {
  * Hash OTP using SHA-256
  */
 function hashOTP(otp) {
-  return crypto.createHash('sha256').update(otp).digest('hex');
+  return crypto.createHash('sha256').update(String(otp)).digest('hex');
 }
 
 /**
- * Send OTP via Fast2SMS
+ * Send OTP via MSG91 (with Fast2SMS fallback)
  */
 export async function sendOtp(req, res) {
   try {
-    // Accept both 'phone' and 'mobile' for compatibility
     const phone = req.body.phone || req.body.mobile;
 
-    // Validation
     if (!phone) {
       return res.status(400).json({
         success: false,
@@ -34,7 +32,7 @@ export async function sendOtp(req, res) {
       });
     }
 
-    // Validate phone format (10 digits)
+    // Validate phone format (10 digits starting with 6-9)
     const phoneRegex = /^[6-9]\d{9}$/;
     if (!phoneRegex.test(phone)) {
       return res.status(400).json({
@@ -43,97 +41,115 @@ export async function sendOtp(req, res) {
       });
     }
 
-    // Generate OTP
+    // Generate OTP & Store
     const otp = generateOTP();
     const hashedOTP = hashOTP(otp);
-    const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+    const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes validity
 
-    // Store hashed OTP with expiry
     otpStore.set(phone, {
       hashedOTP,
       expiry,
     });
 
-    // Send OTP via Fast2SMS
-    // API URL must be EXACT with no trailing slash
-    const fast2smsUrl = 'https://www.fast2sms.com/dev/bulkV2';
-    const apiKey = process.env.FAST2SMS_API_KEY;
+    const msg91AuthKey = process.env.MSG91_AUTH_KEY;
+    const msg91TemplateId = process.env.MSG91_TEMPLATE_ID;
+    const msg91SenderId = process.env.MSG91_SENDER_ID;
+    const msg91BaseUrl = process.env.MSG91_BASE_URL || 'https://control.msg91.com/api/v5';
+    const useSender = process.env.MSG91_USE_SENDER === 'true';
 
-    if (!apiKey) {
-      console.error('FAST2SMS_API_KEY is not set');
-      return res.status(500).json({
-        success: false,
-        message: 'SMS service configuration error',
-      });
-    }
-
-    try {
-      // Create URLSearchParams for form-urlencoded format
-      // Using Quick Route (route = "q") - NO DLT
-      const params = new URLSearchParams();
-      params.append('route', 'q');
-      params.append('message', `Welcome to BuyNest! 🎉 Your one-time password (OTP) is ${otp} Please keep it confidential.`);
-      params.append('numbers', phone);
-
-      const smsResponse = await axios.post(
-        fast2smsUrl,
-        params.toString(), // Send as URL-encoded string
-        {
-          headers: {
-            authorization: apiKey,
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+    // 1. Primary: Send via MSG91
+    if (msg91AuthKey && msg91TemplateId) {
+      try {
+        let msg91Url = `${msg91BaseUrl}/otp?template_id=${encodeURIComponent(msg91TemplateId)}&mobile=91${phone}&authkey=${encodeURIComponent(msg91AuthKey)}&otp=${otp}`;
+        if (useSender && msg91SenderId) {
+          msg91Url += `&sender=${encodeURIComponent(msg91SenderId)}`;
         }
-      );
 
-      console.log('Fast2SMS Response:', smsResponse.data);
+        if (process.env.MSG91_DEBUG === 'true') {
+          console.log(`[MSG91] Sending OTP to 91${phone} using Template ${msg91TemplateId}...`);
+        }
 
-      // Check if SMS was sent successfully
-      if (smsResponse.data.return === true) {
-        return res.json({
-          success: true,
-          message: 'OTP sent successfully',
-        });
-      } else {
-        throw new Error(smsResponse.data.message || 'Failed to send OTP');
+        const msg91Response = await axios.post(
+          msg91Url,
+          {
+            otp: String(otp),
+            OTP: String(otp),
+            company: 'BuyNest',
+          },
+          {
+            headers: {
+              authkey: msg91AuthKey,
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          }
+        );
+
+        if (process.env.MSG91_DEBUG === 'true') {
+          console.log('[MSG91] Response:', msg91Response.data);
+        }
+
+        if (msg91Response.data && (msg91Response.data.type === 'success' || msg91Response.data.request_id)) {
+          return res.json({
+            success: true,
+            message: 'OTP sent successfully via MSG91',
+            requestId: msg91Response.data.request_id,
+          });
+        } else {
+          throw new Error(msg91Response.data?.message || 'MSG91 returned non-success status');
+        }
+      } catch (msg91Err) {
+        console.error('[MSG91 Error]', msg91Err.response?.data || msg91Err.message);
+        // Fallback to Fast2SMS if available
       }
-    } catch (smsError) {
-      // Properly log Fast2SMS errors from response.data
-      if (smsError.response) {
-        console.error('Fast2SMS API Error Response:', {
-          status: smsError.response.status,
-          statusText: smsError.response.statusText,
-          data: smsError.response.data,
-        });
-      } else if (smsError.request) {
-        console.error('Fast2SMS API Error - No response received:', smsError.message);
-      } else {
-        console.error('Fast2SMS API Error:', smsError.message);
-      }
-      
-      // Remove OTP from store if SMS failed
-      otpStore.delete(phone);
-      
-      // Extract error message from Fast2SMS response.data
-      const errorMessage = smsError.response?.data?.message || 
-                           smsError.response?.data?.msg || 
-                           smsError.message || 
-                           'Failed to send OTP. Please try again.';
-      
-      return res.status(500).json({
-        success: false,
-        message: errorMessage,
-      });
     }
+
+    // 2. Fallback: Fast2SMS
+    const fast2smsApiKey = process.env.FAST2SMS_API_KEY;
+    if (fast2smsApiKey) {
+      try {
+        const params = new URLSearchParams();
+        params.append('route', 'q');
+        params.append('message', `Welcome to BuyNest! Your one-time password (OTP) is ${otp}. Please keep it confidential.`);
+        params.append('numbers', phone);
+
+        const smsResponse = await axios.post(
+          'https://www.fast2sms.com/dev/bulkV2',
+          params.toString(),
+          {
+            headers: {
+              authorization: fast2smsApiKey,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            timeout: 10000,
+          }
+        );
+
+        if (smsResponse.data.return === true) {
+          return res.json({
+            success: true,
+            message: 'OTP sent successfully',
+          });
+        }
+      } catch (fast2smsErr) {
+        console.error('[Fast2SMS Error]', fast2smsErr.response?.data || fast2smsErr.message);
+      }
+    }
+
+    // If both SMS providers fail
+    otpStore.delete(phone);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to send OTP. Please check SMS gateway configuration.',
+    });
+
   } catch (error) {
     console.error('Send OTP Error:', error);
     return res.status(500).json({
       success: false,
-      message: 'Internal server error',
+      message: 'Internal server error while sending OTP',
     });
   }
 }
 
-// Export otpStore for use in verifyOtp
 export { otpStore, hashOTP };
-

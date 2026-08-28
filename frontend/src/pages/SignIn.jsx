@@ -1,26 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { useHeaderColor } from '../utils/useHeaderColor';
+import brandLogo from '../assets/buynest.logo.jpeg';
 
 const SignIn = () => {
-  const headerColor = useHeaderColor();
   const [loginMode, setLoginMode] = useState('email'); // 'email' or 'mobile'
   const [step, setStep] = useState(1); // 1: Mobile input, 2: OTP input
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']); // Array for 6-digit OTP
-  const [activeOtpIndex, setActiveOtpIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [resendTimer, setResendTimer] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
-  const otpInputRefs = React.useRef([]);
+  const otpInputRefs = useRef([]);
   const backgroundPath = location.state?.backgroundLocation?.pathname || '/';
   const fromPath = location.state?.from?.pathname;
   const closePath = fromPath || backgroundPath;
@@ -74,23 +73,19 @@ const SignIn = () => {
     setMobile(value);
     setError('');
     
-    // Validate mobile number format (should start with 6-9)
     if (value.length === 10 && !/^[6-9]/.test(value)) {
       setError('Mobile number should start with 6, 7, 8, or 9');
     }
   };
 
   const handleOtpChange = (index, value) => {
-    // Only allow digits
     const digit = value.replace(/\D/g, '').slice(0, 1);
-    
     if (digit) {
       const newOtp = [...otp];
       newOtp[index] = digit;
       setOtp(newOtp);
       setError('');
 
-      // Auto-focus next input
       if (index < 5 && otpInputRefs.current[index + 1]) {
         otpInputRefs.current[index + 1].focus();
       }
@@ -98,20 +93,17 @@ const SignIn = () => {
   };
 
   const handleOtpKeyDown = (index, e) => {
-    // Handle backspace
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       otpInputRefs.current[index - 1].focus();
     }
-    // Handle paste
     if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
       navigator.clipboard.readText().then(text => {
         const digits = text.replace(/\D/g, '').slice(0, 6);
         if (digits.length === 6) {
-          const newOtp = digits.split('');
-          setOtp(newOtp);
+          setOtp(digits.split(''));
           setError('');
-          otpInputRefs.current[5].focus();
+          otpInputRefs.current[5]?.focus();
         }
       });
     }
@@ -122,10 +114,9 @@ const SignIn = () => {
     const pastedData = e.clipboardData.getData('text');
     const digits = pastedData.replace(/\D/g, '').slice(0, 6);
     if (digits.length === 6) {
-      const newOtp = digits.split('');
-      setOtp(newOtp);
+      setOtp(digits.split(''));
       setError('');
-      otpInputRefs.current[5].focus();
+      otpInputRefs.current[5]?.focus();
     }
   };
 
@@ -140,31 +131,16 @@ const SignIn = () => {
     try {
       const resp = await api.signin({ email: formData.email, password: formData.password });
 
-      // Clear any existing cookies from Google/OTP login since we're using localStorage token
-      try {
-        document.cookie.split(";").forEach((c) => {
-          document.cookie = c
-            .replace(/^ +/, "")
-            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-      } catch (e) {
-        console.warn('Failed to clear cookies:', e);
-      }
-
-      // Store token then redirect to intended page or home
       if (resp?.token) {
         localStorage.setItem('auth_token', resp.token);
-        console.log('[Email Login] Token stored in localStorage');
       }
       
       if (resp?.user?.isAdmin) {
         localStorage.setItem('auth_is_admin', 'true');
-        console.log('[Email Login] Admin flag set in localStorage');
       } else {
         try { localStorage.removeItem('auth_is_admin'); } catch { }
       }
 
-      // Store user data for profile display
       if (resp?.user) {
         try {
           localStorage.setItem('user_data', JSON.stringify({ name: resp.user.name, email: resp.user.email }));
@@ -173,27 +149,15 @@ const SignIn = () => {
         }
       }
 
-      // Trigger auth state change event
       window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { authenticated: true } }));
 
       const redirectTo = location.state?.from?.pathname || location.state?.backgroundLocation?.pathname || '/';
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError(err.message || err.response?.message || 'Failed to sign in. Please check your credentials.');
+      setError(err.message || err.response?.message || 'Invalid email or password. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleBackToEmail = () => {
-    setLoginMode('email');
-    setStep(1);
-    setError('');
-    setSuccess('');
-    setMobile('');
-    setOtp(['', '', '', '', '', '']);
-    setActiveOtpIndex(0);
-    setResendTimer(0);
   };
 
   const handleSendOtp = async (e) => {
@@ -201,30 +165,21 @@ const SignIn = () => {
     setError('');
     setSuccess('');
 
-    // Validate mobile number
-    if (mobile.length !== 10) {
-      setError('Please enter a valid 10-digit mobile number');
-      return;
-    }
-
-    if (!/^[6-9]\d{9}$/.test(mobile)) {
-      setError('Mobile number should start with 6, 7, 8, or 9');
+    if (mobile.length !== 10 || !/^[6-9]\d{9}$/.test(mobile)) {
+      setError('Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9');
       return;
     }
 
     setLoading(true);
     try {
       const data = await api.sendOtp(mobile);
-
       if (!data.success) {
         throw new Error(data?.message || 'Failed to send OTP');
       }
-
-      setSuccess(`OTP sent successfully to ${mobile}`);
+      setSuccess(`OTP sent to +91 ${mobile}`);
       setStep(2);
-      setResendTimer(60); // 60 seconds timer
+      setResendTimer(60);
       setOtp(['', '', '', '', '', '']);
-      setActiveOtpIndex(0);
     } catch (err) {
       setError(err.message || err.response?.message || 'Failed to send OTP. Please try again.');
     } finally {
@@ -238,50 +193,28 @@ const SignIn = () => {
     setSuccess('');
 
     const otpValue = getOtpValue();
-    
-    if (otpValue.length !== 6) {
+    if (otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
       setError('Please enter complete 6-digit OTP');
-      return;
-    }
-
-    if (!/^\d{6}$/.test(otpValue)) {
-      setError('OTP must contain only digits');
       return;
     }
 
     setLoading(true);
     try {
       const data = await api.verifyOtp({ mobile, otp: otpValue });
-
       if (!data.success) {
         throw new Error(data?.message || 'Invalid OTP');
       }
 
-      // Clear any existing cookies from Google login since OTP uses localStorage token
-      try {
-        document.cookie.split(";").forEach((c) => {
-          document.cookie = c
-            .replace(/^ +/, "")
-            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-      } catch (e) {
-        console.warn('Failed to clear cookies:', e);
-      }
-
-      // Store token and redirect
       if (data?.token) {
         localStorage.setItem('auth_token', data.token);
-        console.log('[OTP Login] Token stored in localStorage');
       }
       
       if (data?.user?.isAdmin) {
         localStorage.setItem('auth_is_admin', 'true');
-        console.log('[OTP Login] Admin flag set in localStorage');
       } else {
         try { localStorage.removeItem('auth_is_admin'); } catch { }
       }
 
-      // Store user data for profile display
       if (data?.user) {
         try {
           localStorage.setItem('user_data', JSON.stringify({ 
@@ -294,22 +227,16 @@ const SignIn = () => {
         }
       }
 
-      // Trigger auth state change event
       window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { authenticated: true } }));
-
       setSuccess('Login successful! Redirecting...');
       const redirectTo = location.state?.from?.pathname || location.state?.backgroundLocation?.pathname || '/';
       setTimeout(() => {
         navigate(redirectTo, { replace: true });
-      }, 500);
+      }, 400);
     } catch (err) {
       setError(err.message || err.response?.message || 'Invalid OTP. Please try again.');
-      // Clear OTP on error
       setOtp(['', '', '', '', '', '']);
-      setActiveOtpIndex(0);
-      if (otpInputRefs.current[0]) {
-        otpInputRefs.current[0].focus();
-      }
+      otpInputRefs.current[0]?.focus();
     } finally {
       setLoading(false);
     }
@@ -317,23 +244,17 @@ const SignIn = () => {
 
   const handleResendOtp = async () => {
     if (resendTimer > 0) return;
-
     setError('');
     setLoading(true);
     try {
       const data = await api.sendOtp(mobile);
-
       if (!data.success) {
         throw new Error(data?.message || 'Failed to resend OTP');
       }
-
-      setSuccess('OTP resent successfully to your mobile number');
-      setResendTimer(60); // Reset timer to 60 seconds
+      setSuccess('OTP resent successfully');
+      setResendTimer(60);
       setOtp(['', '', '', '', '', '']);
-      setActiveOtpIndex(0);
-      if (otpInputRefs.current[0]) {
-        otpInputRefs.current[0].focus();
-      }
+      otpInputRefs.current[0]?.focus();
     } catch (err) {
       setError(err.message || err.response?.message || 'Failed to resend OTP. Please try again.');
     } finally {
@@ -341,326 +262,314 @@ const SignIn = () => {
     }
   };
 
-  const handleChangeMobile = () => {
-    setStep(1);
-    setOtp(['', '', '', '', '', '']);
-    setActiveOtpIndex(0);
-    setError('');
-    setSuccess('');
-    setResendTimer(0);
-  };
-
   return (
-    <div className="fixed inset-0 z-[120] bg-black/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div className="w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl max-h-[95vh] overflow-y-auto custom-scrollbar" style={{ scrollbarWidth: 'thin', scrollbarColor: '#E7EFD9 transparent' }}>
+    <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden relative transition-all duration-300">
+        
+        {/* Close Button */}
+        <button
+          type="button"
+          onClick={() => navigate(closePath)}
+          className="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all z-10"
+          aria-label="Close"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
 
-            {/* Sign In Form */}
-            <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 border border-gray-200 transition-all duration-300 relative mb-2">
-              <button
-                type="button"
-                onClick={() => navigate(closePath)}
-                className="absolute top-3 right-3 p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
-                aria-label="Close login popup"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              {error && (
-                <div className="mb-3 sm:mb-4 p-3 bg-red-50 border-2 border-red-200 rounded-lg text-xs sm:text-sm text-red-700 flex items-start gap-2 animate-shake">
-                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <span className="flex-1">{error}</span>
-                </div>
-              )}
-              {success && (
-                <div className="mb-3 sm:mb-4 p-3 bg-green-50 border-2 border-green-200 rounded-lg text-xs sm:text-sm text-green-700 flex items-start gap-2">
-                  <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  <span className="flex-1">{success}</span>
-                </div>
-              )}
-
-              {loginMode === 'email' ? (
-                <form onSubmit={handleEmailLogin} className="space-y-3 sm:space-y-4">
-                  <div>
-                    <label htmlFor="email" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                        </svg>
-                      </div>
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-all bg-gray-50 focus:bg-white"
-                        placeholder="Enter your email"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="password" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                      </div>
-                      <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-10 sm:pl-11 pr-4 py-2.5 sm:py-3 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-all bg-gray-50 focus:bg-white"
-                        placeholder="Enter your password"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs sm:text-sm pt-1">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-pink-500 focus:ring-pink-300 border-gray-300 rounded cursor-pointer"
-                      />
-                      <span className="ml-2 text-gray-600">Remember me</span>
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-pink-600 hover:text-pink-700 transition-colors font-medium"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-
-                  <div className="pt-2 space-y-2">
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full text-black py-2.5 sm:py-3 rounded-lg font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-60 transform active:scale-[0.98] flex items-center justify-center gap-2 border-2 border-black text-sm sm:text-base"
-                      style={{ backgroundColor: headerColor }}
-                    >
-                      {loading ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Signing In...
-                        </>
-                      ) : (
-                        <>
-                          Sign In
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              ) : step === 1 ? (
-                <form onSubmit={handleSendOtp} className="space-y-3 sm:space-y-4">
-                  <button
-                    type="button"
-                    onClick={handleBackToEmail}
-                    className="text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors mb-2 flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to email login
-                  </button>
-                  <div>
-                    <label htmlFor="mobile" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
-                      Mobile Number <span className="text-gray-500">(10 digits)</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 font-semibold">+91</span>
-                      </div>
-                      <input
-                        type="tel"
-                        id="mobile"
-                        name="mobile"
-                        value={mobile}
-                        onChange={handleMobileChange}
-                        required
-                        maxLength={10}
-                        inputMode="numeric"
-                        className="w-full pl-12 sm:pl-14 pr-4 py-2.5 sm:py-3 text-sm border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-400 transition-all bg-gray-50 focus:bg-white"
-                        placeholder="Enter 10-digit mobile"
-                      />
-                    </div>
-                    {mobile.length === 10 && !/^[6-9]/.test(mobile) && (
-                      <p className="mt-1 text-xs text-red-600">Mobile number should start with 6, 7, 8, or 9</p>
-                    )}
-                  </div>
-
-                  <div className="pt-2 space-y-2">
-                    <button
-                      type="submit"
-                      disabled={loading || mobile.length !== 10 || !/^[6-9]\d{9}$/.test(mobile)}
-                      className="w-full text-black py-2.5 sm:py-3 rounded-lg border-2 border-black font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform active:scale-[0.98] text-sm sm:text-base"
-                      style={{ backgroundColor: headerColor }}
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Sending OTP...
-                        </span>
-                      ) : (
-                        'Send OTP'
-                      )}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyOtp} className="space-y-3 sm:space-y-4">
-                  <button
-                    type="button"
-                    onClick={handleBackToEmail}
-                    className="text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors mb-2 flex items-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    Back to email login
-                  </button>
-                  <div>
-                    <label htmlFor="otp" className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                      Enter OTP
-                    </label>
-                    <div className="mb-3 text-center">
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        OTP sent to <span className="font-semibold text-gray-900">+91 {mobile}</span>
-                      </p>
-                    </div>
-                    
-                    {/* OTP Input Boxes */}
-                    <div className="flex justify-center gap-2 sm:gap-3 mb-4">
-                      {otp.map((digit, index) => (
-                        <input
-                          key={index}
-                          ref={(el) => (otpInputRefs.current[index] = el)}
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
-                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                          onPaste={handleOtpPaste}
-                          className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 text-center text-lg sm:text-xl md:text-2xl font-bold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-400 focus:border-pink-500 transition-all bg-gray-50 focus:bg-white"
-                          autoFocus={index === 0}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="text-center py-1">
-                    {resendTimer > 0 ? (
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        Resend OTP in <span className="font-semibold text-pink-600">{resendTimer}</span> seconds
-                      </p>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={handleResendOtp}
-                        disabled={loading}
-                        className="text-xs sm:text-sm text-pink-600 hover:text-pink-700 transition-colors disabled:opacity-50 font-semibold underline"
-                      >
-                        Resend OTP
-                      </button>
-                    )}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleChangeMobile}
-                    className="w-full text-xs sm:text-sm text-gray-600 hover:text-gray-800 transition-colors py-1 flex items-center justify-center gap-1"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                    Change mobile number
-                  </button>
-
-                  <div className="pt-2 space-y-2">
-                    <button
-                      type="submit"
-                      disabled={loading || getOtpValue().length !== 6}
-                      className="w-full text-black py-2.5 sm:py-3 rounded-lg border-2 border-black font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed transform active:scale-[0.98] text-sm sm:text-base"
-                      style={{ backgroundColor: headerColor }}
-                    >
-                      {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Verifying...
-                        </span>
-                      ) : (
-                        'Verify OTP'
-                      )}
-                    </button>
-                  </div>
-                </form>
-              )}
-
-              {/* Sign Up Link */}
-              <div className="mt-4 sm:mt-6 text-center">
-                <p className="text-xs sm:text-sm text-gray-600">
-                  Don't have an account?{' '}
-                  <Link
-                    to="/signup"
-                    state={{ backgroundLocation: location.state?.backgroundLocation || location }}
-                    className="text-[#5c9404] hover:text-[#5c9404] font-semibold transition-colors"
-                  >
-                    Sign up here
-                  </Link>
-                </p>
-              </div>
+        <div className="p-6 sm:p-8">
+          
+          {/* Header & Logo */}
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center p-2 rounded-2xl bg-pink-50/80 mb-3 border border-pink-100 shadow-sm">
+              <img src={brandLogo} alt="BuyNest" className="h-8 sm:h-9 w-auto object-contain" />
             </div>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+              Welcome Back
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Sign in to manage your orders, wishlist, and profile
+            </p>
+          </div>
+
+          {/* Mode Switcher Pills */}
+          <div className="flex rounded-2xl bg-gray-100/90 p-1 mb-6">
+            <button
+              type="button"
+              onClick={() => { setLoginMode('email'); setError(''); setSuccess(''); }}
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
+                loginMode === 'email'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              Email & Password
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLoginMode('mobile'); setStep(1); setError(''); setSuccess(''); }}
+              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
+                loginMode === 'mobile'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              Mobile OTP
+            </button>
+          </div>
+
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50/90 border border-red-200 rounded-xl text-xs sm:text-sm text-red-700 flex items-start gap-2.5 animate-shake">
+              <svg className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span className="flex-1 font-medium">{error}</span>
+            </div>
+          )}
+
+          {/* Success Alert */}
+          {success && (
+            <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs sm:text-sm text-emerald-700 flex items-start gap-2.5">
+              <svg className="w-5 h-5 flex-shrink-0 text-emerald-500 mt-0.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="flex-1 font-medium">{success}</span>
+            </div>
+          )}
+
+          {/* EMAIL & PASSWORD LOGIN FORM */}
+          {loginMode === 'email' ? (
+            <form onSubmit={handleEmailLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                  </div>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-11 pr-4 py-3 text-sm bg-gray-50/70 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 transition-all font-medium placeholder-gray-400"
+                    placeholder="name@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700">
+                    Password
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-pink-600 hover:text-pink-700 font-semibold hover:underline"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-11 pr-11 py-3 text-sm bg-gray-50/70 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 transition-all font-medium placeholder-gray-400"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-700 transition-colors"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Signing In...</span>
+                    </>
+                  ) : (
+                    <span>Sign In</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          ) : step === 1 ? (
+            /* MOBILE OTP - STEP 1 (PHONE INPUT) */
+            <form onSubmit={handleSendOtp} className="space-y-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-700 font-bold text-sm">
+                    +91
+                  </div>
+                  <input
+                    type="tel"
+                    value={mobile}
+                    onChange={handleMobileChange}
+                    required
+                    maxLength={10}
+                    inputMode="numeric"
+                    className="w-full pl-14 pr-4 py-3 text-sm bg-gray-50/70 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 transition-all font-medium placeholder-gray-400"
+                    placeholder="Enter 10-digit mobile number"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading || mobile.length !== 10 || !/^[6-9]\d{9}$/.test(mobile)}
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Sending OTP...</span>
+                    </>
+                  ) : (
+                    <span>Get OTP</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* MOBILE OTP - STEP 2 (OTP INPUT) */
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <div className="text-center">
+                <p className="text-xs sm:text-sm text-gray-600 mb-4">
+                  Enter the 6-digit OTP sent to <span className="font-bold text-gray-900">+91 {mobile}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setStep(1); setError(''); }}
+                    className="ml-2 text-xs font-semibold text-pink-600 hover:underline"
+                  >
+                    Edit
+                  </button>
+                </p>
+
+                {/* 6 Digit OTP Inputs */}
+                <div className="flex justify-center gap-2 sm:gap-2.5 mb-4">
+                  {otp.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (otpInputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={handleOtpPaste}
+                      className="w-11 h-12 sm:w-12 sm:h-14 text-center text-xl font-bold border-2 border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 transition-all bg-gray-50 focus:bg-white text-gray-900"
+                    />
+                  ))}
+                </div>
+
+                <div className="text-xs text-gray-500 mb-2">
+                  {resendTimer > 0 ? (
+                    <span>Resend OTP in <strong className="text-pink-600">{resendTimer}s</strong></span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={loading}
+                      className="text-pink-600 font-bold hover:underline"
+                    >
+                      Resend OTP
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading || getOtpValue().length !== 6}
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Verifying...</span>
+                    </>
+                  ) : (
+                    <span>Verify & Sign In</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Footer - Switch to Sign Up */}
+          <div className="mt-6 pt-5 border-t border-gray-100 text-center">
+            <p className="text-xs sm:text-sm text-gray-600">
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                state={{ backgroundLocation: location.state?.backgroundLocation || location }}
+                className="text-pink-600 hover:text-pink-700 font-bold hover:underline"
+              >
+                Create an account
+              </Link>
+            </p>
+          </div>
+
+        </div>
       </div>
+
       <style>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+        @keyframes fadeIn {
+          from { opacity: 0; transform: scale(0.96); }
+          to { opacity: 1; transform: scale(1); }
         }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #E7EFD9;
-          border-radius: 2px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #DEE9CD;
+        .animate-fadeIn {
+          animation: fadeIn 0.2s ease-out;
         }
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
-          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-          20%, 40%, 60%, 80% { transform: translateX(5px); }
+          20%, 60% { transform: translateX(-4px); }
+          40%, 80% { transform: translateX(4px); }
         }
         .animate-shake {
-          animation: shake 0.5s;
+          animation: shake 0.4s ease-in-out;
         }
       `}</style>
     </div>

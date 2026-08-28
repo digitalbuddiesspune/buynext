@@ -3,18 +3,23 @@ import { useNavigate } from 'react-router-dom';
 import { FaTruck, FaAward, FaShieldAlt, FaUndo } from 'react-icons/fa';
 
 import bathAndHandwashImg from '../assets/bath and handwash.png';
-import feminineHygieneImg from '../assets/Feminine Hygiene.png';
-import fragrancesDeosImg from '../assets/Fragrances & Deos.png';
-import haircareImg from '../assets/haircare.png';
-import healthAndMedicineImg from '../assets/Health and.png';
-import makeupImg from '../assets/makeup.png';
-import oralCareImg from '../assets/oral care.png';
-import skinCareImg from '../assets/skin care.png';
+import feminineHygieneImg from '../assets/Feminine Hygiene1.png';
+import fragrancesDeosImg from '../assets/Fragrances & Deos1.png';
+import haircareImg from '../assets/Hair Care1.png';
+import healthAndMedicineImg from '../assets/Health & Medicine1.png';
+import makeupImg from '../assets/Makeup1.png';
+import oralCareImg from '../assets/oral care1.png';
+import skinCareImg from '../assets/skin care1.png';
 
 import offerZone1Img from '../assets/offerzone1.png';
 import offerZone2Img from '../assets/offerzone2.png';
 import offerZone3Img from '../assets/offerzone3.png';
 import offerZone4Img from '../assets/offerzone4.png';
+
+import premiumSkinCareImg from '../assets/priminum skincare.png';
+import premiumMakeupImg from '../assets/primiummakeup.png';
+import premiumHairCareImg from '../assets/primium haircare.png';
+import premiumFragrancesImg from '../assets/primiumfragerence.png';
 
 const BuyNestSections = () => {
   const navigate = useNavigate();
@@ -52,11 +57,11 @@ const BuyNestSections = () => {
         image: haircareImg, 
         path: '/category/beauty-and-hygiene/hair-care' 
       },
-      {
-        name: 'Health & Medicine',
-        icon: '💊',
-        image: healthAndMedicineImg,
-        path: '/category/beauty-and-hygiene/health-and-medicine'
+      { 
+        name: 'Health & Medicine', 
+        icon: '💊', 
+        image: healthAndMedicineImg, 
+        path: '/category/beauty-and-hygiene/health-and-medicine' 
       },
       { 
         name: 'Makeup', 
@@ -64,11 +69,11 @@ const BuyNestSections = () => {
         image: makeupImg, 
         path: '/category/beauty-and-hygiene/makeup' 
       },
-      {
-        name: 'Oral Care',
-        icon: '🪥',
-        image: oralCareImg,
-        path: '/category/beauty-and-hygiene/oral-care'
+      { 
+        name: 'Oral Care', 
+        icon: '🪥', 
+        image: oralCareImg, 
+        path: '/category/beauty-and-hygiene/oral-care' 
       },
       { 
         name: 'Skin Care', 
@@ -112,14 +117,14 @@ const BuyNestSections = () => {
               
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4 lg:gap-5 px-2 sm:px-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 px-2 sm:px-4">
             {categories.map((category, index) => (
               <div
                 key={index}
                 className="group cursor-pointer"
                 onClick={() => handleCategoryClick(category.path)}
               >
-                <div className="relative aspect-square bg-white rounded-lg sm:rounded-xl border border-gray-200 hover:border-gray-400 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:scale-105">
+                <div className="relative aspect-[3/2] bg-white rounded-xl sm:rounded-2xl border border-gray-200 hover:border-gray-400 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:scale-105">
                   <div className="absolute inset-0 bg-gray-50">
                     <img
                       src={category.image}
@@ -268,7 +273,7 @@ const BuyNestSections = () => {
   const PremiumCollection = () => {
     const productData = [
       {
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774521094/0dbfe300-b764-4e49-a966-fcf5a9df5b7b.png',
+        image: premiumSkinCareImg,
         name: 'Skin Care',
         path: '/category/beauty-and-hygiene/skin-care',
         description: 'Moisturizers, cleansers, serums and daily skin essentials.',
@@ -276,7 +281,7 @@ const BuyNestSections = () => {
         bgTint: 'bg-rose-50'
       },
       {
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774528869/a8c0009f-b9a6-483a-aa83-16cdcc6d1e01.png',
+        image: premiumMakeupImg,
         name: 'Makeup',
         path: '/category/beauty-and-hygiene/makeup',
         description: 'Lips, eyes, face, brushes and makeup kits.',
@@ -284,7 +289,7 @@ const BuyNestSections = () => {
         bgTint: 'bg-cyan-50'
       },
       {
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433102/9abba838-a920-4a7d-a0ff-47ec24bbbc9e.png',
+        image: premiumHairCareImg,
         name: 'Hair Care',
         path: '/category/beauty-and-hygiene/hair-care',
         description: 'Shampoos, conditioners, hair oils and styling.',
@@ -292,7 +297,7 @@ const BuyNestSections = () => {
         bgTint: 'bg-emerald-50'
       },
       {
-        image: 'https://res.cloudinary.com/dzd47mpdo/image/upload/v1774433220/8323916c-168e-4dec-9d82-3d8546f016c1.png',
+        image: premiumFragrancesImg,
         name: 'Fragrances & Deos',
         path: '/category/beauty-and-hygiene/fragrances-and-deos',
         description: 'Body sprays, mists, deodorants and perfumes.',
@@ -325,44 +330,38 @@ const BuyNestSections = () => {
               <div
                 key={index}
                 onClick={() => handleCategoryClick(product.path)}
-                className={`group relative overflow-hidden rounded-xl ${product.bgTint} transition-all duration-300 w-full cursor-pointer border border-gray-200 shadow-sm`}
+                className="group relative overflow-hidden rounded-2xl bg-white transition-all duration-300 w-full cursor-pointer border border-gray-200 shadow-sm hover:shadow-xl hover:-translate-y-1"
               >
-                <div className="relative w-full aspect-[4/5] bg-gray-100 overflow-hidden">
+                <div className="relative w-full aspect-square bg-white overflow-hidden p-1.5 sm:p-2.5">
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 rounded-xl"
                     loading="lazy"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = 'https://via.placeholder.com/400x500/1F2937/FFFFFF?text=Product+Image';
+                      e.target.src = 'https://via.placeholder.com/500x500/1F2937/FFFFFF?text=Product+Image';
                     }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-transparent" />
-                  <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
-                    <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] sm:text-xs font-semibold text-white bg-[#5c9404] shadow">
+                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                    <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-white bg-pink-500 shadow-sm">
                       Top Category
                     </span>
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
-                    <h3 className="text-white font-semibold text-sm sm:text-base md:text-lg leading-tight drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">
-                      {product.name}
-                    </h3>
-                  </div>
                 </div>
-                <div className={`px-3 py-3 sm:px-4 sm:py-4 ${product.bgTint}`}>
-                  <p className="text-xs sm:text-sm text-gray-600 leading-relaxed min-h-[34px] sm:min-h-[40px]">
+                <div className="px-3 pb-4 sm:px-4 sm:pb-5 bg-white text-center">
+                  <h3 className="text-gray-900 font-bold text-sm sm:text-base md:text-lg mb-1 group-hover:text-pink-600 transition-colors">
+                    {product.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-500 leading-relaxed line-clamp-2 mb-3 min-h-[32px] sm:min-h-[38px]">
                     {product.description}
                   </p>
-                  <div className="mt-3">
-                    <button
-                      type="button"
-                      className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2 text-[12px] sm:text-sm font-semibold text-white bg-gradient-to-r from-slate-800 to-slate-700 hover:from-slate-900 hover:to-slate-800 active:scale-[0.98] transition-all duration-200 shadow-md group-hover:shadow-lg"
-                    >
-                      {product.cta}
-                      <span aria-hidden="true" className="transition-transform duration-200 group-hover:translate-x-0.5">{''}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className="w-full inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-xs sm:text-sm font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-md group-hover:shadow-lg"
+                  >
+                    {product.cta}
+                  </button>
                 </div>
               </div>
             ))}

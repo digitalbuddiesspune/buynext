@@ -5,7 +5,7 @@ import brandLogo from '../assets/buynest.logo.jpeg';
 
 const SignIn = () => {
   const [loginMode, setLoginMode] = useState('email'); // 'email' or 'mobile'
-  const [step, setStep] = useState(1); // 1: Mobile input, 2: OTP input
+  const [step, setStep] = useState(1); // 1: Mobile input, 2: OTP input, 3: New User Name & Email input
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -13,6 +13,8 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']); // Array for 6-digit OTP
+  const [newName, setNewName] = useState('');
+  const [newEmail, setNewEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -205,6 +207,15 @@ const SignIn = () => {
         throw new Error(data?.message || 'Invalid OTP');
       }
 
+      // If user is new -> ask for Name & Email in Step 3!
+      if (data.isNewUser) {
+        setSuccess('OTP verified successfully!');
+        setStep(3);
+        setLoading(false);
+        return;
+      }
+
+      // Existing user login
       if (data?.token) {
         localStorage.setItem('auth_token', data.token);
       }
@@ -237,6 +248,52 @@ const SignIn = () => {
       setError(err.message || err.response?.message || 'Invalid OTP. Please try again.');
       setOtp(['', '', '', '', '', '']);
       otpInputRefs.current[0]?.focus();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 3: Complete registration with Name & Email
+  const handleCompleteRegistration = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!newName.trim()) {
+      setError('Please enter your full name');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const data = await api.verifyOtp({
+        mobile,
+        otp: getOtpValue(),
+        name: newName.trim(),
+        email: newEmail.trim() || undefined
+      });
+
+      if (!data.success || !data.token) {
+        throw new Error(data?.message || 'Failed to complete registration');
+      }
+
+      localStorage.setItem('auth_token', data.token);
+      if (data?.user) {
+        localStorage.setItem('user_data', JSON.stringify({
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone
+        }));
+      }
+
+      window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { authenticated: true } }));
+      setSuccess('Account created successfully! Redirecting...');
+      const redirectTo = location.state?.from?.pathname || location.state?.backgroundLocation?.pathname || '/';
+      setTimeout(() => {
+        navigate(redirectTo, { replace: true });
+      }, 400);
+    } catch (err) {
+      setError(err.message || 'Failed to save details. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -286,38 +343,42 @@ const SignIn = () => {
               <img src={brandLogo} alt="BuyNest" className="h-8 sm:h-9 w-auto object-contain" />
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-              Welcome Back
+              {step === 3 ? 'Welcome to BuyNest!' : 'Welcome Back'}
             </h2>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Sign in to manage your orders, wishlist, and profile
+              {step === 3
+                ? 'Please enter your name and email to complete your registration'
+                : 'Sign in to manage your orders, wishlist, and profile'}
             </p>
           </div>
 
-          {/* Mode Switcher Pills */}
-          <div className="flex rounded-2xl bg-gray-100/90 p-1 mb-6">
-            <button
-              type="button"
-              onClick={() => { setLoginMode('email'); setError(''); setSuccess(''); }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
-                loginMode === 'email'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              Email & Password
-            </button>
-            <button
-              type="button"
-              onClick={() => { setLoginMode('mobile'); setStep(1); setError(''); setSuccess(''); }}
-              className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
-                loginMode === 'mobile'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-800'
-              }`}
-            >
-              Mobile OTP
-            </button>
-          </div>
+          {/* Mode Switcher Pills (Only for steps 1 and 2) */}
+          {step !== 3 && (
+            <div className="flex rounded-2xl bg-gray-100/90 p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => { setLoginMode('email'); setError(''); setSuccess(''); }}
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
+                  loginMode === 'email'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                Email & Password
+              </button>
+              <button
+                type="button"
+                onClick={() => { setLoginMode('mobile'); setStep(1); setError(''); setSuccess(''); }}
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
+                  loginMode === 'mobile'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-800'
+                }`}
+              >
+                Mobile OTP
+              </button>
+            </div>
+          )}
 
           {/* Error Alert */}
           {error && (
@@ -470,7 +531,7 @@ const SignIn = () => {
                 </button>
               </div>
             </form>
-          ) : (
+          ) : step === 2 ? (
             /* MOBILE OTP - STEP 2 (OTP INPUT) */
             <form onSubmit={handleVerifyOtp} className="space-y-4">
               <div className="text-center">
@@ -531,7 +592,75 @@ const SignIn = () => {
                       <span>Verifying...</span>
                     </>
                   ) : (
-                    <span>Verify & Sign In</span>
+                    <span>Verify & Continue</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          ) : (
+            /* STEP 3: NEW USER NAME & EMAIL ONBOARDING FORM */
+            <form onSubmit={handleCompleteRegistration} className="space-y-4 animate-fadeIn">
+              <div className="bg-pink-50/60 p-3 rounded-2xl border border-pink-100 mb-3 text-center">
+                <span className="text-xs text-pink-700 font-semibold">
+                  📱 Mobile Verified: <strong>+91 {mobile}</strong>
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                  Full Name <span className="text-pink-500">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => { setNewName(e.target.value); setError(''); }}
+                    required
+                    className="w-full pl-11 pr-4 py-3 text-sm bg-gray-50/70 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 transition-all font-medium placeholder-gray-400"
+                    placeholder="Enter your full name"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
+                  Email Address <span className="text-gray-400 font-normal">(Optional)</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                  </div>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => { setNewEmail(e.target.value); setError(''); }}
+                    className="w-full pl-11 pr-4 py-3 text-sm bg-gray-50/70 border border-gray-200 rounded-xl focus:outline-none focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 transition-all font-medium placeholder-gray-400"
+                    placeholder="name@example.com"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={loading || !newName.trim()}
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Completing Registration...</span>
+                    </>
+                  ) : (
+                    <span>Complete & Start Shopping</span>
                   )}
                 </button>
               </div>
@@ -539,18 +668,20 @@ const SignIn = () => {
           )}
 
           {/* Footer - Switch to Sign Up */}
-          <div className="mt-6 pt-5 border-t border-gray-100 text-center">
-            <p className="text-xs sm:text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link
-                to="/signup"
-                state={{ backgroundLocation: location.state?.backgroundLocation || location }}
-                className="text-pink-600 hover:text-pink-700 font-bold hover:underline"
-              >
-                Create an account
-              </Link>
-            </p>
-          </div>
+          {step !== 3 && (
+            <div className="mt-6 pt-5 border-t border-gray-100 text-center">
+              <p className="text-xs sm:text-sm text-gray-600">
+                Don't have an account?{' '}
+                <Link
+                  to="/signup"
+                  state={{ backgroundLocation: location.state?.backgroundLocation || location }}
+                  className="text-pink-600 hover:text-pink-700 font-bold hover:underline"
+                >
+                  Create an account
+                </Link>
+              </p>
+            </div>
+          )}
 
         </div>
       </div>

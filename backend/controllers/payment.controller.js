@@ -347,13 +347,25 @@ export const initiatePayuPayment = async (req, res) => {
       shippingAddress,
     });
 
-    const backendUrl = process.env.BACKEND_URL || (process.env.NODE_ENV === 'production' ? 'https://buynest.shop' : `http://localhost:${process.env.PORT || 5001}`);
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+    const host = req.get('host');
+    const backendUrl = process.env.BACKEND_URL || `${protocol}://${host}`;
     const surl = `${backendUrl}/api/payment/payu/response`;
     const furl = `${backendUrl}/api/payment/payu/response`;
+    const curl = `${backendUrl}/api/payment/payu/response`;
+
+    const originHeader = req.get('origin') || req.get('referer');
+    let frontendBase = process.env.FRONTEND_URL || 'https://www.buynestventures.shop';
+    if (originHeader) {
+      try {
+        const u = new URL(originHeader);
+        frontendBase = `${u.protocol}//${u.host}`;
+      } catch {}
+    }
 
     const udf1 = userId.toString();
     const udf2 = order._id.toString();
-    const udf3 = '';
+    const udf3 = frontendBase;
     const udf4 = '';
     const udf5 = '';
 
@@ -374,6 +386,7 @@ export const initiatePayuPayment = async (req, res) => {
         phone: userPhone,
         surl,
         furl,
+        curl,
         hash,
         udf1,
         udf2,
@@ -466,7 +479,9 @@ export const handlePayuResponse = async (req, res) => {
 
     const key = process.env.PAYU_KEY || 'rgt1q1';
     const salt = process.env.PAYU_SALT || 'ZhXv2CWaOELwsdjOb6L486lIlmfHPAbI';
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = (data.udf3 && data.udf3.startsWith('http')) 
+      ? data.udf3 
+      : (process.env.FRONTEND_URL || 'https://www.buynestventures.shop');
 
     const {
       status,

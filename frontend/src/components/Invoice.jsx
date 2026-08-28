@@ -1,7 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { getProductImage } from '../utils/imagePlaceholder';
+import { COMPANY_INFO } from '../config/companyInfo';
+import brandLogo from '../assets/buynest.logo.jpeg';
+import { api } from '../utils/api';
 
 const Invoice = ({ order, user, onPrint }) => {
+  const [logoUrl, setLogoUrl] = useState(brandLogo);
+
+  useEffect(() => {
+    api.getLogo('footer')
+      .then((logo) => {
+        if (logo?.url) setLogoUrl(logo.url);
+      })
+      .catch(() => {});
+  }, []);
+
   if (!order) {
     return (
       <div className="text-center py-12">
@@ -28,10 +41,23 @@ const Invoice = ({ order, user, onPrint }) => {
     <div className="max-w-4xl mx-auto bg-white p-8">
       {/* Header */}
       <div className="border-b-2 border-gray-200 pb-6 mb-6">
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Barringer Pharma</h1>
-            <p className="text-gray-600">BARRINGER PHARMA PRIVATE LIMITED</p>
+        <div className="flex justify-between items-start gap-6">
+          <div className="flex items-start gap-4 min-w-0">
+            <img
+              src={logoUrl}
+              alt={COMPANY_INFO.brandName}
+              className="h-16 w-auto max-w-[120px] object-contain shrink-0"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = brandLogo;
+              }}
+            />
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">{COMPANY_INFO.brandName}</h1>
+              <p className="text-gray-600 font-medium text-sm sm:text-base">{COMPANY_INFO.legalName}</p>
+              <p className="text-sm text-gray-500 mt-1 max-w-sm">{COMPANY_INFO.registeredAddress}</p>
+              <p className="text-sm text-gray-500 mt-1">GSTIN: {COMPANY_INFO.gstin}</p>
+            </div>
           </div>
           <div className="text-right">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">INVOICE</h2>
@@ -51,7 +77,11 @@ const Invoice = ({ order, user, onPrint }) => {
               month: 'long', 
               day: 'numeric' 
             })}</p>
-            <p><span className="font-medium">Payment Method:</span> {order.paymentMethod === 'COD' ? 'Cash on Delivery' : 'Online Payment'}</p>
+            <p><span className="font-medium">Payment Method:</span> {
+              order.paymentMethod === 'COD' ? 'Cash on Delivery' :
+              order.paymentMethod === 'PayU' ? 'PayU (Online)' :
+              'Online Payment'
+            }</p>
             <p><span className="font-medium">Status:</span> <span className="capitalize">{order.status || 'Confirmed'}</span></p>
           </div>
         </div>
@@ -145,7 +175,7 @@ const Invoice = ({ order, user, onPrint }) => {
       {/* Footer */}
       <div className="mt-8 pt-6 border-t border-gray-200 text-center text-sm text-gray-600">
         <p className="mb-2">Thank you for your order!</p>
-        <p>For any queries, please contact our customer support.</p>
+        <p>For any queries, contact us at {COMPANY_INFO.email} or {COMPANY_INFO.phone}</p>
       </div>
 
       {/* Print Button */}

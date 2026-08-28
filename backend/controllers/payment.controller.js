@@ -5,6 +5,7 @@ import Order from '../models/Order.js';
 import { Address } from '../models/Address.js';
 import { Product } from '../models/product.js';
 import { User } from '../models/User.js';
+import { sendOrderInvoiceEmail } from '../services/invoiceEmail.service.js';
 
 const parseRupeeToNumber = (value) => {
   if (typeof value === 'number') return value;
@@ -167,6 +168,9 @@ export const verifyPayment = async (req, res) => {
     await cart.save();
 
     console.log('[verifyPayment] Order created successfully:', order._id);
+    sendOrderInvoiceEmail(order._id).catch((err) =>
+      console.error('[verifyPayment] Invoice email failed:', err.message)
+    );
     return res.json({ success: true, order });
   } catch (err) {
     console.error('[verifyPayment] Error:', err?.message || err);
@@ -238,6 +242,9 @@ export const createCodOrder = async (req, res) => {
     cart.items = [];
     await cart.save();
 
+    sendOrderInvoiceEmail(order._id).catch((err) =>
+      console.error('[createCodOrder] Invoice email failed:', err.message)
+    );
     return res.json({ success: true, order });
   } catch (err) {
     console.error('COD order creation error:', err?.message || err);
@@ -499,6 +506,7 @@ export const handlePayuResponse = async (req, res) => {
       }
 
       if (order) {
+        const wasAlreadyPaid = order.status === 'paid';
         order.status = 'paid';
         order.paymentMethod = 'PayU';
         order.payuMihpayid = mihpayid || '';
@@ -508,6 +516,12 @@ export const handlePayuResponse = async (req, res) => {
         // Clear Cart
         if (order.user) {
           await Cart.updateOne({ user: order.user }, { $set: { items: [] } });
+        }
+
+        if (!wasAlreadyPaid) {
+          sendOrderInvoiceEmail(order._id, { email, name: firstname }).catch((err) =>
+            console.error('[handlePayuResponse] Invoice email failed:', err.message)
+          );
         }
 
         const successUrl = `${frontendUrl}/order-success?method=payu&orderId=${order._id}`;

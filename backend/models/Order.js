@@ -41,6 +41,7 @@ const OrderSchema = new mongoose.Schema(
     payuMihpayid: { type: String },
     payuStatus: { type: String },
     shippingAddress: { type: ShippingAddressSchema },
+    invoiceEmailSentAt: { type: Date },
   },
   { timestamps: true }
 );

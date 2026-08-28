@@ -217,9 +217,46 @@ export async function updateOrderStatus(req, res) {
 
 export async function adminListProducts(req, res) {
   try {
-    const products = await Product.find({}).sort({ createdAt: -1 }).lean();
+    const rawProducts = await Product.find({}).sort({ _id: -1 }).lean();
+    const products = rawProducts.map((p) => {
+      const title = p.title || p['SKU Name'] || p.name || p['Product Name'] || p.skuName || 'Product';
+      const category = p.category || p['Category'] || p.taxonomy?.mainCategory || 'Uncategorized';
+      const subcategory = p.subcategory || p['Sub-Category'] || '';
+      const mrp = typeof p.mrp === 'number' && p.mrp > 0 ? p.mrp : parseCurrency(p['MRP'] || p.mrp || 149);
+      const price = typeof p.price === 'number' && p.price > 0 ? p.price : (mrp || 149);
+      const discountPercent = p.discountPercent || 0;
+
+      let image = null;
+      if (p.images && typeof p.images === 'object' && !Array.isArray(p.images)) {
+        image = p.images.image1 || p.images.image2 || p.images.image3 || null;
+      } else if (Array.isArray(p.images) && p.images.length > 0) {
+        const first = p.images[0];
+        image = typeof first === 'string' ? first : (first?.url || null);
+      }
+      if (!image && p['Image Link']) image = p['Image Link'];
+      if (!image && p.image) image = typeof p.image === 'string' ? p.image : p.image?.url;
+      if (!image && p.imageUrl) image = p.imageUrl;
+      if (!image && p.sourceData?.imageLink) image = p.sourceData.imageLink;
+
+      return {
+        ...p,
+        title,
+        name: title,
+        category,
+        subcategory,
+        mrp,
+        price,
+        discountPercent,
+        image,
+        images: {
+          ...(p.images && typeof p.images === 'object' && !Array.isArray(p.images) ? p.images : {}),
+          image1: image || p.images?.image1 || null,
+        },
+      };
+    });
     return res.json(products);
   } catch (err) {
+    console.error('[adminListProducts] Error:', err);
     return res.status(500).json({ message: 'Failed to list products', error: err.message });
   }
 }

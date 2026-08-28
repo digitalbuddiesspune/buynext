@@ -274,11 +274,18 @@ const AdminProducts = () => {
   }, [filtered, page, pageSize]);
   useEffect(() => { setPage(1); }, [query, categoryFilter, pageSize]);
 
-  const filterCategories = ['all', 'kids-clothing', 'kids-accessories', 'footwear', 'baby-care', 'toys'];
+  const uniqueCategories = useMemo(() => {
+    const set = new Set(list.map(p => p.category).filter(Boolean));
+    return ['all', ...Array.from(set).sort()];
+  }, [list]);
+
   const categoryStats = useMemo(() => {
-    const stats = {};
-    filterCategories.forEach(cat => {
-      stats[cat] = list.filter(p => cat === 'all' || String(p.category || '').toLowerCase() === cat).length;
+    const stats = { all: list.length };
+    list.forEach(p => {
+      const cat = p.category;
+      if (cat) {
+        stats[cat] = (stats[cat] || 0) + 1;
+      }
     });
     return stats;
   }, [list]);
@@ -363,14 +370,13 @@ const AdminProducts = () => {
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-3 sm:px-4 py-2 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-pink-500 focus:outline-none"
+                  className="px-3 sm:px-4 py-2 text-sm sm:text-base border-2 border-gray-200 rounded-lg focus:border-pink-500 focus:outline-none capitalize"
                 >
-                  <option value="all">All ({categoryStats.all})</option>
-                  <option value="kids-clothing">Kids Clothing ({categoryStats['kids-clothing']})</option>
-                  <option value="kids-accessories">Kids Accessories ({categoryStats['kids-accessories']})</option>
-                  <option value="footwear">Footwear ({categoryStats.footwear})</option>
-                  <option value="baby-care">Baby Care ({categoryStats['baby-care']})</option>
-                  <option value="toys">Toys ({categoryStats.toys})</option>
+                  {uniqueCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat === 'all' ? `All Categories (${categoryStats.all || 0})` : `${cat} (${categoryStats[cat] || 0})`}
+                    </option>
+                  ))}
                 </select>
                 <select
                   value={pageSize}

@@ -59,7 +59,7 @@ const MobileHeader = () => {
 
   return (
     <>
-      <div ref={headerRef} className="md:hidden w-full border-t border-gray-200 border-b border-gray-200 shadow-sm relative bg-white" style={{ overflow: 'visible' }}>
+      <div ref={headerRef} className="lg:hidden w-full border-t border-gray-200 border-b border-gray-200 shadow-sm relative bg-white" style={{ overflow: 'visible' }}>
         {/* Horizontal Scrollable Categories */}
         <div className="relative px-2 sm:px-3 py-1.5" ref={categoryRef} style={{ overflow: 'visible' }}>
           <div className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto hide-scrollbar" style={{ overflowY: 'visible', scrollBehavior: 'smooth' }}>

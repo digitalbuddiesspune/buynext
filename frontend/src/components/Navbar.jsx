@@ -345,46 +345,48 @@ const Navbar = () => {
     <nav className={`sticky top-0 z-[70] w-full bg-white/95 backdrop-blur-sm border-b border-gray-100 transition-shadow duration-200 ${isScrolled ? 'shadow-md' : 'shadow-sm'}`}>
       {/* Bottom Bar - Clean white background with Logo, Navigation, and Icons */}
       <div className="w-full">
-        <div className="max-w-7xl mx-auto w-full px-3 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-4">
+        <div className="w-full max-w-[1750px] mx-auto px-3 sm:px-4 md:px-5 lg:px-6 xl:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-3 lg:gap-4 xl:gap-6 min-w-0">
             {/* Logo/Brand - Left */}
             <Link to="/" className="flex-shrink-0 flex items-center py-1">
               <img 
                 src={headerLogo.url || brandLogo}
                 alt={headerLogo.alt || 'BuyNest'}
-                className="h-7 sm:h-8 md:h-9 lg:h-10 w-auto max-w-[110px] sm:max-w-[140px] md:max-w-[160px] lg:max-w-[185px] object-contain transition-all duration-200"
+                className="h-7 sm:h-8 md:h-8.5 lg:h-9 xl:h-10 w-auto max-w-[100px] sm:max-w-[120px] md:max-w-[130px] lg:max-w-[150px] xl:max-w-[175px] object-contain transition-all duration-200"
                 onError={(e) => {
                   e.target.src = brandLogo;
                 }}
               />
             </Link>
 
-            {/* Navigation Menu - Center (Desktop) with Categories */}
-            <div className="hidden md:flex items-center justify-center flex-1 gap-1 lg:gap-1.5 xl:gap-2 overflow-x-auto hide-scrollbar py-1 px-1" ref={categoryRef}>
-              {categories.map((category) => {
-                const isActive = location.pathname === category.path;
-                return (
-                  <button
-                    key={category.name}
-                    type="button"
-                    className={`flex items-center font-medium text-[11px] lg:text-[12.5px] xl:text-[13px] tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap px-2 sm:px-2.5 lg:px-3 py-1.5 rounded-full touch-manipulation shrink-0 ${
-                      isActive
-                        ? 'bg-gray-900 text-white shadow-sm font-semibold'
-                        : 'text-gray-700 hover:text-black hover:bg-gray-100 active:bg-gray-200'
-                    }`}
-                    onClick={() => {
-                      navigate(category.path);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                  >
-                    <span className="whitespace-nowrap">{category.name}</span>
-                  </button>
-                );
-              })}
+            {/* Navigation Menu - Center (Desktop & Laptop >= 1024px) */}
+            <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 px-1" ref={categoryRef}>
+              <div className="flex items-center gap-1 xl:gap-1.5 2xl:gap-2 mx-auto">
+                {categories.map((category) => {
+                  const isActive = location.pathname === category.path;
+                  return (
+                    <button
+                      key={category.name}
+                      type="button"
+                      className={`flex items-center font-medium text-[11px] xl:text-[12.5px] 2xl:text-[13px] tracking-tight transition-all duration-200 cursor-pointer whitespace-nowrap px-2 xl:px-2.5 2xl:px-3 py-1 xl:py-1.5 rounded-full touch-manipulation shrink-0 ${
+                        isActive
+                          ? 'bg-gray-900 text-white shadow-sm font-semibold'
+                          : 'text-gray-700 hover:text-black hover:bg-gray-100 active:bg-gray-200'
+                      }`}
+                      onClick={() => {
+                        navigate(category.path);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                    >
+                      <span className="whitespace-nowrap">{category.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Icons - Right (Search, Cart on Mobile; All icons on Desktop) */}
-            <div className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-2.5 flex-shrink-0 ml-auto md:ml-0">
+            <div className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-2 lg:space-x-2.5 flex-shrink-0 ml-auto md:ml-0">
               {/* Search Icon - Always Visible */}
               <div className="relative" ref={searchWrapRefDesktop}>
                 <button

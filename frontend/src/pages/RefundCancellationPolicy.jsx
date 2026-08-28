@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import ScrollToTop from "../components/ScrollToTop";
 import { RotateCcw, CheckCircle, Clock, Ban, Mail, Phone, AlertCircle, ShieldCheck, FileText } from "lucide-react";
+import { COMPANY_INFO } from "../config/companyInfo";
 
 export default function RefundCancellationPolicy() {
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function RefundCancellationPolicy() {
             Return &amp; Refund Policy
           </h1>
           <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            At Barringer Pharma, we want you to be completely satisfied with your purchase. If you are not happy with your order, we offer a hassle-free return and refund process.
+            At {COMPANY_INFO.brandName}, we want you to be completely satisfied with your purchase. If you are not happy with your order, we offer a hassle-free return and refund process.
           </p>
         </div>
       </div>
@@ -80,7 +81,7 @@ export default function RefundCancellationPolicy() {
             <li>Include the original invoice and RA number.</li>
           </ol>
           <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-xs sm:text-sm text-gray-700">
-            <strong>Alternative:</strong> You can also directly email us at <a href="mailto:pharmabarringer@gmail.com" className="text-rose-600 hover:underline font-semibold">pharmabarringer@gmail.com</a> or call <a href="tel:8745015901" className="text-gray-900 font-semibold hover:underline">8745015901</a>.
+            <strong>Alternative:</strong> You can also directly email us at <a href={`mailto:${COMPANY_INFO.email}`} className="text-rose-600 hover:underline font-semibold">{COMPANY_INFO.email}</a> or call <a href={`tel:${COMPANY_INFO.phone}`} className="text-gray-900 font-semibold hover:underline">{COMPANY_INFO.phone}</a>.
           </div>
         </div>
 
@@ -116,7 +117,7 @@ export default function RefundCancellationPolicy() {
               </li>
             </ul>
             <p className="text-xs sm:text-sm text-gray-500">
-              To cancel, contact us at <a href="mailto:pharmabarringer@gmail.com" className="text-rose-600 font-semibold hover:underline">pharmabarringer@gmail.com</a>.
+              To cancel, contact us at <a href={`mailto:${COMPANY_INFO.email}`} className="text-rose-600 font-semibold hover:underline">{COMPANY_INFO.email}</a>.
             </p>
           </div>
         </div>
@@ -129,16 +130,16 @@ export default function RefundCancellationPolicy() {
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-rose-400" /> Email
               </p>
-              <a href="mailto:pharmabarringer@gmail.com" className="text-white hover:text-rose-300 break-all font-medium">
-                pharmabarringer@gmail.com
+              <a href={`mailto:${COMPANY_INFO.email}`} className="text-white hover:text-rose-300 break-all font-medium">
+                {COMPANY_INFO.email}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-rose-400" /> Phone
               </p>
-              <a href="tel:8745015901" className="text-white hover:text-rose-300 font-medium">
-                8745015901
+              <a href={`tel:${COMPANY_INFO.phone}`} className="text-white hover:text-rose-300 font-medium">
+                {COMPANY_INFO.phone}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">

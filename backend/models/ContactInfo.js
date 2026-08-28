@@ -32,10 +32,10 @@ contactInfoSchema.statics.getContactInfo = async function () {
   let contactInfo = await this.findOne();
   if (!contactInfo) {
     contactInfo = await this.create({
-      email: 'pharmabarringer@gmail.com',
-      phone: '8745015901',
-      address: 'Office No 110, Vishal Tower, District Centre, Janakpuri, New Delhi, Delhi - 110058, India',
-      companyName: 'BuyNest',
+      email: 'buynestventures5@gmail.com',
+      phone: '8512898728',
+      address: 'Space No-B-4, Basement Floor, Plot No.-12, Suneja Tower-II, Dist Center, Janak Puri, New Delhi, Delhi, 110058, India',
+      companyName: 'BUYNEST VENTURES PRIVATE LIMITED',
     });
   }
   return contactInfo;

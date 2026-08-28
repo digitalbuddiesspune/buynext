@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import ScrollToTop from "../components/ScrollToTop";
 import { Shield, Mail, Phone, MapPin } from "lucide-react";
+import { COMPANY_INFO } from "../config/companyInfo";
 
 export default function PrivacyPolicy() {
   useEffect(() => {
@@ -20,9 +21,9 @@ export default function PrivacyPolicy() {
             Privacy Policy
           </h1>
           <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            At <strong className="text-white font-semibold">BARRINGER PHARMA PRIVATE LIMITED</strong> ("we," "us," or "our"), we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
+            At <strong className="text-white font-semibold">{COMPANY_INFO.legalName}</strong> ("we," "us," or "our"), we are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website and use our services.
           </p>
-          <p className="text-xs sm:text-sm text-gray-400 mt-3">Last Updated: May 2025</p>
+          <p className="text-xs sm:text-sm text-gray-400 mt-3">Last Updated: August 2025</p>
         </div>
       </div>
 
@@ -188,7 +189,7 @@ export default function PrivacyPolicy() {
             <li><strong className="text-gray-900">Withdraw Consent:</strong> You can withdraw consent for data processing where applicable</li>
           </ul>
           <p className="text-xs sm:text-sm text-gray-600">
-            To exercise these rights, please contact us at <a href="mailto:pharmabarringer@gmail.com" className="text-rose-600 font-semibold hover:underline">pharmabarringer@gmail.com</a>.
+            To exercise these rights, please contact us at <a href={`mailto:${COMPANY_INFO.email}`} className="text-rose-600 font-semibold hover:underline">{COMPANY_INFO.email}</a>.
           </p>
         </div>
 
@@ -253,16 +254,16 @@ export default function PrivacyPolicy() {
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-rose-400" /> Email
               </p>
-              <a href="mailto:pharmabarringer@gmail.com" className="text-white hover:text-rose-300 break-all font-medium">
-                pharmabarringer@gmail.com
+              <a href={`mailto:${COMPANY_INFO.email}`} className="text-white hover:text-rose-300 break-all font-medium">
+                {COMPANY_INFO.email}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-rose-400" /> Phone
               </p>
-              <a href="tel:8745015901" className="text-white hover:text-rose-300 font-medium">
-                8745015901
+              <a href={`tel:${COMPANY_INFO.phone}`} className="text-white hover:text-rose-300 font-medium">
+                {COMPANY_INFO.phone}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 sm:col-span-1">
@@ -270,7 +271,7 @@ export default function PrivacyPolicy() {
                 <MapPin className="w-3.5 h-3.5 text-rose-400" /> Address
               </p>
               <p className="text-white leading-relaxed text-xs">
-                Office No 110, Vishal Tower, District Centre, Janakpuri, New Delhi, Delhi - 110058, India
+                {COMPANY_INFO.registeredAddress}
               </p>
             </div>
           </div>

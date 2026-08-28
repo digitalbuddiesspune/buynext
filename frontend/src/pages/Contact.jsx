@@ -1,6 +1,7 @@
 import React from 'react';
 import ScrollToTop from '../components/ScrollToTop';
 import { Mail, Phone, MapPin, Clock, MessageSquare, Building2 } from 'lucide-react';
+import { COMPANY_INFO } from '../config/companyInfo';
 
 const Contact = () => {
   return (
@@ -29,10 +30,13 @@ const Contact = () => {
             <Building2 className="w-6 h-6" />
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2">
-            BARRINGER PHARMA PRIVATE LIMITED
+            {COMPANY_INFO.legalName}
           </h2>
           <p className="text-sm sm:text-base text-gray-500 max-w-xl mx-auto">
-            Distributor and retailer of cosmetics, beauty, and personal care products.
+            E-commerce retailer of premium apparel and fashion products.
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            GSTIN: {COMPANY_INFO.gstin} &nbsp;|&nbsp; CIN: {COMPANY_INFO.cin}
           </p>
         </div>
 
@@ -48,10 +52,10 @@ const Contact = () => {
               <p className="text-sm text-gray-500 mb-4">For inquiries, orders, and customer support:</p>
             </div>
             <a
-              href="mailto:pharmabarringer@gmail.com"
+              href={`mailto:${COMPANY_INFO.email}`}
               className="inline-flex items-center text-base sm:text-lg font-semibold text-rose-600 hover:text-rose-700 break-all transition-colors"
             >
-              pharmabarringer@gmail.com
+              {COMPANY_INFO.email}
             </a>
           </div>
 
@@ -66,13 +70,13 @@ const Contact = () => {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <a
-                href="tel:8745015901"
+                href={`tel:${COMPANY_INFO.phone}`}
                 className="inline-flex items-center text-base sm:text-lg font-semibold text-gray-900 hover:text-rose-600 transition-colors"
               >
-                8745015901
+                {COMPANY_INFO.phone}
               </a>
               <a
-                href="https://wa.me/918745015901"
+                href={`https://wa.me/91${COMPANY_INFO.phone}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold rounded-full transition-colors inline-flex items-center gap-1 shadow-sm"
@@ -89,11 +93,11 @@ const Contact = () => {
             </div>
             <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">Address</h3>
             <p className="text-sm text-gray-600 leading-relaxed">
-              <strong className="text-gray-900 font-semibold block mb-1">BARRINGER PHARMA PRIVATE LIMITED</strong>
-              Office No 110, Vishal Tower<br />
-              District Centre, Janakpuri<br />
-              New Delhi, Delhi - 110058<br />
-              India
+              <strong className="text-gray-900 font-semibold block mb-1">{COMPANY_INFO.legalName}</strong>
+              {COMPANY_INFO.registeredAddress}
+            </p>
+            <p className="text-sm text-gray-500 mt-3">
+              Contact Person: <strong className="text-gray-700">{COMPANY_INFO.contactPerson}</strong>
             </p>
           </div>
 

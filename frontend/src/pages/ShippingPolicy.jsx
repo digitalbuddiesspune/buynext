@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import ScrollToTop from "../components/ScrollToTop";
 import { Truck, PackageCheck, Clock, ShieldAlert, Mail, Phone, CheckCircle, AlertTriangle } from "lucide-react";
+import { COMPANY_INFO } from "../config/companyInfo";
 
 export default function ShippingPolicy() {
   useEffect(() => {
@@ -20,7 +21,7 @@ export default function ShippingPolicy() {
             Shipping Policy
           </h1>
           <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            At Barringer Pharma, we understand the importance of timely delivery. We have partnered with reliable logistics providers to ensure your cosmetics and beauty products reach you safely and on time.
+            At {COMPANY_INFO.brandName}, we understand the importance of timely delivery. We have partnered with reliable logistics providers to ensure your apparel orders reach you safely and on time.
           </p>
         </div>
       </div>
@@ -152,7 +153,7 @@ export default function ShippingPolicy() {
             In the rare event that your order is damaged during transit or lost:
           </p>
           <ul className="space-y-2 text-sm sm:text-base text-gray-600 leading-relaxed list-disc list-inside mb-4">
-            <li>Please contact us immediately at <a href="mailto:pharmabarringer@gmail.com" className="text-rose-600 hover:underline font-semibold">pharmabarringer@gmail.com</a> or call <a href="tel:8745015901" className="text-gray-900 font-semibold hover:underline">8745015901</a>.</li>
+            <li>Please contact us immediately at <a href={`mailto:${COMPANY_INFO.email}`} className="text-rose-600 hover:underline font-semibold">{COMPANY_INFO.email}</a> or call <a href={`tel:${COMPANY_INFO.phone}`} className="text-gray-900 font-semibold hover:underline">{COMPANY_INFO.phone}</a>.</li>
             <li>Provide your order number and photos of the damaged package (if applicable).</li>
             <li>We will investigate and resolve the issue promptly.</li>
             <li>You may be eligible for a replacement or full refund as per our refund policy.</li>
@@ -170,16 +171,16 @@ export default function ShippingPolicy() {
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-rose-400" /> Email
               </p>
-              <a href="mailto:pharmabarringer@gmail.com" className="text-white hover:text-rose-300 break-all font-medium">
-                pharmabarringer@gmail.com
+              <a href={`mailto:${COMPANY_INFO.email}`} className="text-white hover:text-rose-300 break-all font-medium">
+                {COMPANY_INFO.email}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-rose-400" /> Phone
               </p>
-              <a href="tel:8745015901" className="text-white hover:text-rose-300 font-medium">
-                8745015901
+              <a href={`tel:${COMPANY_INFO.phone}`} className="text-white hover:text-rose-300 font-medium">
+                {COMPANY_INFO.phone}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">

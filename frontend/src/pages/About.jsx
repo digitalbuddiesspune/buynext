@@ -1,6 +1,7 @@
 import React from 'react';
 import ScrollToTop from '../components/ScrollToTop';
 import { Sparkles, Target, Eye, ShieldCheck, HeartHandshake, Lightbulb, CheckCircle2, Building, Mail, Phone, MapPin } from 'lucide-react';
+import { COMPANY_INFO } from '../config/companyInfo';
 
 const About = () => {
   return (
@@ -14,10 +15,10 @@ const About = () => {
             About Us
           </div>
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-4">
-            Welcome to Barringer Pharma
+            Welcome to {COMPANY_INFO.brandName}
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Based in New Delhi, India, <strong className="text-white font-semibold">BARRINGER PHARMA PRIVATE LIMITED</strong> is a dynamic company dedicated to the distribution and sale of a wide range of cosmetics, beauty, and personal care products.
+            Based in New Delhi, India, <strong className="text-white font-semibold">{COMPANY_INFO.legalName}</strong> is an e-commerce company dedicated to bringing you a curated range of premium apparel and fashion products.
           </p>
         </div>
       </div>
@@ -27,7 +28,7 @@ const About = () => {
         {/* Intro Highlight Box */}
         <div className="bg-white rounded-2xl p-6 sm:p-10 border border-gray-200 shadow-sm">
           <p className="text-base sm:text-lg text-gray-700 leading-relaxed text-center max-w-4xl mx-auto">
-            Our mission is to make premium cosmetics and beauty products accessible and affordable for everyone. Whether it's skincare, makeup, haircare, or daily-use personal care brands — we ensure variety, value, and quality under one roof.
+            Our mission is to make premium apparel accessible and affordable for everyone. Whether it's everyday wear, seasonal collections, or trending fashion — we ensure variety, value, and quality under one roof.
           </p>
         </div>
 
@@ -40,7 +41,7 @@ const About = () => {
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Our Vision</h2>
             <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-              To become a leading name in the cosmetics distribution and retail sector by offering diverse, high-quality beauty products that enhance everyday living, while maintaining a strong presence in Delhi and across India.
+              To become a leading name in the online apparel and fashion retail sector by offering diverse, high-quality clothing that enhances everyday style, while maintaining a strong presence in Delhi and across India.
             </p>
           </div>
 
@@ -51,7 +52,7 @@ const About = () => {
             </div>
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Our Mission</h2>
             <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
-              To deliver excellence in product availability, affordability, and service — ensuring every customer finds the right cosmetics and beauty products with complete satisfaction.
+              To deliver excellence in product availability, affordability, and service — ensuring every customer finds the right apparel with complete satisfaction.
             </p>
           </div>
         </div>
@@ -70,7 +71,7 @@ const About = () => {
               </div>
               <h3 className="text-base font-bold text-gray-900 mb-2">Customer-Centric</h3>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                We prioritize customer satisfaction by helping people find the right beauty and skincare products for their needs.
+                We prioritize customer satisfaction by helping people find the right apparel and fashion products for their needs.
               </p>
             </div>
 
@@ -80,7 +81,7 @@ const About = () => {
               </div>
               <h3 className="text-base font-bold text-gray-900 mb-2">Quality Assurance</h3>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Every cosmetic product is carefully sourced from trusted manufacturers and licensed brands.
+                Every apparel product is carefully sourced from trusted manufacturers and quality brands.
               </p>
             </div>
 
@@ -90,7 +91,7 @@ const About = () => {
               </div>
               <h3 className="text-base font-bold text-gray-900 mb-2">Innovation</h3>
               <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                Continuously expanding our portfolio with the latest beauty trends and innovations.
+                Continuously expanding our portfolio with the latest fashion trends and styles.
               </p>
             </div>
 
@@ -116,7 +117,7 @@ const About = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 text-sm sm:text-base">
             <div>
               <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-1">Company Name</p>
-              <p className="text-white font-semibold text-lg">BARRINGER PHARMA PRIVATE LIMITED</p>
+              <p className="text-white font-semibold text-lg">{COMPANY_INFO.legalName}</p>
               
               <div className="mt-5">
                 <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-2 flex items-center gap-1.5">
@@ -124,9 +125,15 @@ const About = () => {
                   Registered Address
                 </p>
                 <p className="text-gray-200 leading-relaxed">
-                  Office No 110, Vishal Tower, District Centre, Janakpuri<br />
-                  New Delhi, Delhi - 110058, India
+                  {COMPANY_INFO.registeredAddress}
                 </p>
+              </div>
+
+              <div className="mt-5 space-y-1">
+                <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider">GSTIN</p>
+                <p className="text-gray-200">{COMPANY_INFO.gstin}</p>
+                <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mt-3">CIN</p>
+                <p className="text-gray-200">{COMPANY_INFO.cin}</p>
               </div>
             </div>
 
@@ -136,8 +143,8 @@ const About = () => {
                   <Mail className="w-4 h-4 text-rose-400 shrink-0" />
                   Email
                 </p>
-                <a href="mailto:pharmabarringer@gmail.com" className="text-rose-300 hover:text-rose-200 underline font-medium">
-                  pharmabarringer@gmail.com
+                <a href={`mailto:${COMPANY_INFO.email}`} className="text-rose-300 hover:text-rose-200 underline font-medium">
+                  {COMPANY_INFO.email}
                 </a>
               </div>
 
@@ -146,8 +153,20 @@ const About = () => {
                   <Phone className="w-4 h-4 text-rose-400 shrink-0" />
                   Mobile
                 </p>
-                <a href="tel:8745015901" className="text-white hover:text-rose-200 font-medium">
-                  8745015901
+                <a href={`tel:${COMPANY_INFO.phone}`} className="text-white hover:text-rose-200 font-medium">
+                  {COMPANY_INFO.phone}
+                </a>
+              </div>
+
+              <div>
+                <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-1">Contact Person</p>
+                <p className="text-white font-medium">{COMPANY_INFO.contactPerson}</p>
+              </div>
+
+              <div>
+                <p className="text-gray-400 text-xs uppercase font-semibold tracking-wider mb-1">Website</p>
+                <a href={COMPANY_INFO.website} className="text-rose-300 hover:text-rose-200 underline font-medium" target="_blank" rel="noopener noreferrer">
+                  {COMPANY_INFO.website}
                 </a>
               </div>
             </div>

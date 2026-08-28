@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import ScrollToTop from "../components/ScrollToTop";
 import { FileCheck, Mail, Phone, MapPin } from "lucide-react";
+import { COMPANY_INFO } from "../config/companyInfo";
 
 export default function TermsAndConditions() {
   useEffect(() => {
@@ -21,9 +22,9 @@ export default function TermsAndConditions() {
             Terms and Conditions
           </h1>
           <p className="text-sm sm:text-base md:text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
-            Welcome to Barringer Pharma. These Terms and Conditions ("Terms") govern your use of our website and services. By accessing or using our website, you agree to be bound by these Terms.
+            Welcome to {COMPANY_INFO.brandName}. These Terms and Conditions ("Terms") govern your use of our website and services. By accessing or using our website, you agree to be bound by these Terms.
           </p>
-          <p className="text-xs sm:text-sm text-gray-400 mt-3">Last Updated: May 2025</p>
+          <p className="text-xs sm:text-sm text-gray-400 mt-3">Last Updated: August 2025</p>
         </div>
       </div>
 
@@ -48,10 +49,14 @@ export default function TermsAndConditions() {
           </h2>
           <p className="text-sm text-gray-600 mb-3">This website is operated by:</p>
           <div className="p-4 sm:p-5 rounded-xl bg-gray-50 border border-gray-100 text-sm sm:text-base space-y-2">
-            <p className="font-bold text-gray-900">BARRINGER PHARMA PRIVATE LIMITED</p>
-            <p className="text-gray-700">Office No 110, Vishal Tower, District Centre, Janakpuri, New Delhi, Delhi - 110058, India</p>
-            <p className="text-gray-700">Email: <a href="mailto:pharmabarringer@gmail.com" className="text-rose-600 font-semibold hover:underline">pharmabarringer@gmail.com</a></p>
-            <p className="text-gray-700">Phone: <a href="tel:8745015901" className="text-gray-900 font-semibold hover:underline">8745015901</a></p>
+            <p className="font-bold text-gray-900">{COMPANY_INFO.legalName}</p>
+            <p className="text-gray-700">{COMPANY_INFO.registeredAddress}</p>
+            <p className="text-gray-700">GSTIN: {COMPANY_INFO.gstin}</p>
+            <p className="text-gray-700">CIN: {COMPANY_INFO.cin}</p>
+            <p className="text-gray-700">Website: <a href={COMPANY_INFO.website} className="text-rose-600 font-semibold hover:underline" target="_blank" rel="noopener noreferrer">{COMPANY_INFO.website}</a></p>
+            <p className="text-gray-700">Email: <a href={`mailto:${COMPANY_INFO.email}`} className="text-rose-600 font-semibold hover:underline">{COMPANY_INFO.email}</a></p>
+            <p className="text-gray-700">Phone: <a href={`tel:${COMPANY_INFO.phone}`} className="text-gray-900 font-semibold hover:underline">{COMPANY_INFO.phone}</a></p>
+            <p className="text-gray-700">Contact Person: {COMPANY_INFO.contactPerson}</p>
           </div>
         </div>
 
@@ -123,7 +128,7 @@ export default function TermsAndConditions() {
             Intellectual Property
           </h2>
           <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-            All content on this website, including text, graphics, logos, images, and software, is the property of Barringer Pharma Private Limited and is protected by Indian and international copyright laws.
+            All content on this website, including text, graphics, logos, images, and software, is the property of {COMPANY_INFO.legalName} and is protected by Indian and international copyright laws.
           </p>
         </div>
 
@@ -152,16 +157,16 @@ export default function TermsAndConditions() {
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5 text-rose-400" /> Email
               </p>
-              <a href="mailto:pharmabarringer@gmail.com" className="text-white hover:text-rose-300 break-all font-medium">
-                pharmabarringer@gmail.com
+              <a href={`mailto:${COMPANY_INFO.email}`} className="text-white hover:text-rose-300 break-all font-medium">
+                {COMPANY_INFO.email}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10">
               <p className="text-gray-400 text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                 <Phone className="w-3.5 h-3.5 text-rose-400" /> Phone
               </p>
-              <a href="tel:8745015901" className="text-white hover:text-rose-300 font-medium">
-                8745015901
+              <a href={`tel:${COMPANY_INFO.phone}`} className="text-white hover:text-rose-300 font-medium">
+                {COMPANY_INFO.phone}
               </a>
             </div>
             <div className="p-4 rounded-xl bg-white/5 border border-white/10 sm:col-span-1">
@@ -169,7 +174,7 @@ export default function TermsAndConditions() {
                 <MapPin className="w-3.5 h-3.5 text-rose-400" /> Address
               </p>
               <p className="text-white leading-relaxed text-xs">
-                Office No 110, Vishal Tower, District Centre, Janakpuri, New Delhi, Delhi - 110058, India
+                {COMPANY_INFO.registeredAddress}
               </p>
             </div>
           </div>

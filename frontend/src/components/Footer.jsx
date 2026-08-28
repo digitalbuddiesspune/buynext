@@ -3,13 +3,15 @@ import { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Facebook, Instagram, Truck, Shield, RotateCcw, HeadphonesIcon, MessageCircle, Clock, ChevronRight } from 'lucide-react';
 import { api } from '../utils/api';
 import brandLogo from '../assets/buynest.logo.jpeg';
+import { COMPANY_INFO } from '../config/companyInfo';
 
-/** Static footer contact */
 const CONTACT_INFO = {
-  email: 'pharmabarringer@gmail.com',
-  phone: '8745015901',
-  address: 'Office No 110, Vishal Tower, District Centre, Janakpuri, New Delhi, Delhi - 110058, India',
-  companyName: 'BARRINGER PHARMA PRIVATE LIMITED',
+  email: COMPANY_INFO.email,
+  phone: COMPANY_INFO.phone,
+  address: COMPANY_INFO.registeredAddress,
+  companyName: COMPANY_INFO.legalName,
+  gstin: COMPANY_INFO.gstin,
+  cin: COMPANY_INFO.cin,
 };
 
 const Footer = () => {
@@ -143,7 +145,7 @@ const Footer = () => {
               />
             </Link>
             <p className="text-xs sm:text-sm text-gray-600 leading-relaxed max-w-sm">
-              <strong className="font-semibold text-gray-900">BARRINGER PHARMA PRIVATE LIMITED</strong> — your trusted partner for premium cosmetics, skincare, makeup and beauty products. We deliver excellence in product availability, affordability, and service across India.
+              <strong className="font-semibold text-gray-900">{COMPANY_INFO.legalName}</strong> — your trusted online destination for premium apparel and fashion. We deliver excellence in product availability, affordability, and service across India.
             </p>
             
             {/* Social Links */}
@@ -278,8 +280,8 @@ const Footer = () => {
           <p>
             © {currentYear} <strong className="text-white font-semibold">{CONTACT_INFO.companyName}</strong>. All Rights Reserved.
           </p>
-          <p className="text-gray-500">
-            Powered by Secure &amp; Verified Commerce
+          <p className="text-gray-500 text-center sm:text-right">
+            GSTIN: {CONTACT_INFO.gstin} &nbsp;|&nbsp; CIN: {CONTACT_INFO.cin}
           </p>
         </div>
       </div>

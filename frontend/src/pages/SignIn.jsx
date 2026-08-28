@@ -15,6 +15,7 @@ const SignIn = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']); // Array for 6-digit OTP
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -226,6 +227,9 @@ const SignIn = () => {
 
       // If user is new -> ask for Name & Email in Step 3!
       if (data.isNewUser) {
+        if (data.verificationToken) {
+          setVerificationToken(data.verificationToken);
+        }
         setSuccess('OTP verified successfully!');
         setStep(3);
         setLoading(false);
@@ -280,9 +284,10 @@ const SignIn = () => {
     try {
       const data = await api.verifyOtp({
         mobile,
-        otp: getOtpValue(),
+        otp: getOtpValue() || undefined,
         name: newName.trim(),
-        email: newEmail.trim() || undefined
+        email: newEmail.trim() || undefined,
+        verificationToken: verificationToken || undefined,
       });
 
       if (!data.success || !data.token) {

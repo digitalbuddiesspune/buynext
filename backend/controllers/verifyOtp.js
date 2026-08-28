@@ -24,14 +24,29 @@ export async function verifyOtp(req, res) {
     }
 
     let isVerified = false;
+    const jwtSecret = process.env.JWT_SECRET || 'secret';
 
-    // Check if phone was already verified in the last 10 minutes (for step 3 profile completion)
-    const verifiedTimestamp = verifiedPhonesStore.get(phone);
-    if (verifiedTimestamp && Date.now() < verifiedTimestamp) {
-      isVerified = true;
+    // 1. Check signed verificationToken from step 2
+    if (req.body.verificationToken) {
+      try {
+        const decoded = jwt.verify(req.body.verificationToken, jwtSecret);
+        if (decoded.phone === phone && decoded.purpose === 'otp_registration') {
+          isVerified = true;
+        }
+      } catch (tokenErr) {
+        console.warn('[verifyOtp] Verification token invalid/expired:', tokenErr.message);
+      }
     }
 
-    // Otherwise, verify the provided OTP
+    // 2. Check in-memory map
+    if (!isVerified) {
+      const verifiedTimestamp = verifiedPhonesStore.get(phone);
+      if (verifiedTimestamp && Date.now() < verifiedTimestamp) {
+        isVerified = true;
+      }
+    }
+
+    // 3. Otherwise, verify the provided OTP
     if (!isVerified) {
       if (!otp) {
         return res.status(400).json({
@@ -47,7 +62,7 @@ export async function verifyOtp(req, res) {
         });
       }
 
-      // 1. Check local OTP store
+      // Check local OTP store
       const storedData = otpStore.get(phone);
       if (storedData) {
         if (Date.now() > storedData.expiry) {
@@ -65,7 +80,7 @@ export async function verifyOtp(req, res) {
         }
       }
 
-      // 2. Secondary: MSG91 Verify API fallback
+      // Secondary: MSG91 Verify API fallback
       if (!isVerified) {
         const msg91AuthKey = process.env.MSG91_AUTH_KEY;
         const msg91BaseUrl = process.env.MSG91_BASE_URL || 'https://control.msg91.com/api/v5';
@@ -90,19 +105,33 @@ export async function verifyOtp(req, res) {
       });
     }
 
-    // Check if user already exists in DB
+    // Check if user already exists by phone or email
     let user = await User.findOne({ phone });
+    let existingByEmail = email ? await User.findOne({ email }) : null;
+
+    // If account with email exists and is different from phone user document
+    if (existingByEmail) {
+      if (user && String(user._id) !== String(existingByEmail._id)) {
+        // Remove temporary placeholder OTP document if it exists
+        if (!user.passwordHash && !user.googleId) {
+          try { await User.deleteOne({ _id: user._id }); } catch {}
+        }
+      }
+      user = existingByEmail;
+    }
 
     // If new user (or existing user without custom name) and name was NOT provided yet -> ask for Name & Email
     const isNew = !user || !user.name || user.name.startsWith('User ');
     if (isNew && !name) {
-      // Mark phone as verified for 10 minutes so user can submit name without re-entering OTP
-      verifiedPhonesStore.set(phone, Date.now() + 10 * 60 * 1000);
+      // Mark phone as verified for 15 minutes and issue a signed verificationToken
+      verifiedPhonesStore.set(phone, Date.now() + 15 * 60 * 1000);
+      const verificationToken = jwt.sign({ phone, purpose: 'otp_registration' }, jwtSecret, { expiresIn: '15m' });
 
       return res.json({
         success: true,
         isNewUser: true,
         phone,
+        verificationToken,
         message: 'OTP verified successfully! Please enter your name and email to complete registration.',
       });
     }
@@ -110,22 +139,39 @@ export async function verifyOtp(req, res) {
     // User is submitting profile or is an existing user with profile
     verifiedPhonesStore.delete(phone);
 
+    try {
+      if (!user) {
+        // Create new user with submitted name and email
+        user = await User.create({
+          name: name || `User ${phone.slice(-4)}`,
+          email: email || undefined,
+          phone,
+          provider: 'otp',
+        });
+        console.log('New user registered via OTP:', { id: String(user._id), name: user.name, phone: user.phone });
+      } else {
+        // Update existing user
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (phone) user.phone = phone;
+        await user.save();
+      }
+    } catch (saveErr) {
+      console.warn('[verifyOtp] Save error, attempting recovery:', saveErr.message);
+      if (saveErr.code === 11000) {
+        user = await User.findOne({ $or: [{ phone }, ...(email ? [{ email }] : [])] });
+        if (user) {
+          if (name) user.name = name;
+          if (phone && !user.phone) user.phone = phone;
+          try { await user.save(); } catch {}
+        }
+      } else {
+        throw saveErr;
+      }
+    }
+
     if (!user) {
-      // Create new user with submitted name and email
-      user = await User.create({
-        name: name || `User ${phone.slice(-4)}`,
-        email: email || undefined,
-        phone,
-        provider: 'otp',
-      });
-      console.log('New user registered via OTP:', { id: String(user._id), name: user.name, phone: user.phone });
-    } else {
-      // Update existing user
-      if (name) user.name = name;
-      if (email && !user.email) user.email = email;
-      if (!user.phone) user.phone = phone;
-      user.provider = 'otp';
-      await user.save();
+      throw new Error('Failed to create or retrieve user profile');
     }
 
     const jwtSecret = process.env.JWT_SECRET;

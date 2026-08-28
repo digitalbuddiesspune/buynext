@@ -86,9 +86,9 @@ export const api = {
     body: JSON.stringify({ mobile }),
     credentials: 'include',
   }),
-  verifyOtp: ({ mobile, otp, name, email }) => request('/api/auth/verify-otp', { 
+  verifyOtp: ({ mobile, otp, name, email, verificationToken }) => request('/api/auth/verify-otp', { 
     method: 'POST', 
-    body: JSON.stringify({ mobile, otp, name, email }),
+    body: JSON.stringify({ mobile, otp, name, email, verificationToken }),
     credentials: 'include',
   }),
 

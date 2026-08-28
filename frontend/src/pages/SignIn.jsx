@@ -22,9 +22,23 @@ const SignIn = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const otpInputRefs = useRef([]);
-  const backgroundPath = location.state?.backgroundLocation?.pathname || '/';
-  const fromPath = location.state?.from?.pathname;
-  const closePath = fromPath || backgroundPath;
+
+  const getTargetRedirect = () => {
+    const rawFrom = location.state?.from?.pathname || (typeof location.state?.from === 'string' ? location.state?.from : null);
+    const rawBg = location.state?.backgroundLocation?.pathname;
+    if (rawFrom && rawFrom !== '/signin' && rawFrom !== '/signup') return rawFrom;
+    if (rawBg && rawBg !== '/signin' && rawBg !== '/signup') return rawBg;
+    return '/';
+  };
+
+  const closePath = getTargetRedirect();
+
+  // If already authenticated on mount, close immediately
+  useEffect(() => {
+    if (localStorage.getItem('auth_token')) {
+      navigate(closePath, { replace: true, state: {} });
+    }
+  }, []);
 
   useEffect(() => {
     const scrollY = window.scrollY;
@@ -124,6 +138,12 @@ const SignIn = () => {
 
   const getOtpValue = () => otp.join('');
 
+  const finishLoginAndRedirect = () => {
+    window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { authenticated: true } }));
+    const target = getTargetRedirect();
+    navigate(target, { replace: true, state: {} });
+  };
+
   const handleEmailLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -151,10 +171,7 @@ const SignIn = () => {
         }
       }
 
-      window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { authenticated: true } }));
-
-      const redirectTo = location.state?.from?.pathname || location.state?.backgroundLocation?.pathname || '/';
-      navigate(redirectTo, { replace: true });
+      finishLoginAndRedirect();
     } catch (err) {
       setError(err.message || err.response?.message || 'Invalid email or password. Please try again.');
     } finally {
@@ -238,12 +255,7 @@ const SignIn = () => {
         }
       }
 
-      window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { authenticated: true } }));
-      setSuccess('Login successful! Redirecting...');
-      const redirectTo = location.state?.from?.pathname || location.state?.backgroundLocation?.pathname || '/';
-      setTimeout(() => {
-        navigate(redirectTo, { replace: true });
-      }, 400);
+      finishLoginAndRedirect();
     } catch (err) {
       setError(err.message || err.response?.message || 'Invalid OTP. Please try again.');
       setOtp(['', '', '', '', '', '']);
@@ -286,12 +298,7 @@ const SignIn = () => {
         }));
       }
 
-      window.dispatchEvent(new CustomEvent('authStateChanged', { detail: { authenticated: true } }));
-      setSuccess('Account created successfully! Redirecting...');
-      const redirectTo = location.state?.from?.pathname || location.state?.backgroundLocation?.pathname || '/';
-      setTimeout(() => {
-        navigate(redirectTo, { replace: true });
-      }, 400);
+      finishLoginAndRedirect();
     } catch (err) {
       setError(err.message || 'Failed to save details. Please try again.');
     } finally {
@@ -326,8 +333,8 @@ const SignIn = () => {
         {/* Close Button */}
         <button
           type="button"
-          onClick={() => navigate(closePath)}
-          className="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all z-10"
+          onClick={() => navigate(closePath, { replace: true, state: {} })}
+          className="absolute top-4 right-4 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all z-10 cursor-pointer"
           aria-label="Close"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2.2} viewBox="0 0 24 24">
@@ -358,7 +365,7 @@ const SignIn = () => {
               <button
                 type="button"
                 onClick={() => { setLoginMode('email'); setError(''); setSuccess(''); }}
-                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 cursor-pointer ${
                   loginMode === 'email'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-800'
@@ -369,7 +376,7 @@ const SignIn = () => {
               <button
                 type="button"
                 onClick={() => { setLoginMode('mobile'); setStep(1); setError(''); setSuccess(''); }}
-                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 ${
+                className={`flex-1 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all duration-200 cursor-pointer ${
                   loginMode === 'mobile'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-800'
@@ -455,7 +462,7 @@ const SignIn = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-700 transition-colors"
+                    className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -476,7 +483,7 @@ const SignIn = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -518,7 +525,7 @@ const SignIn = () => {
                 <button
                   type="submit"
                   disabled={loading || mobile.length !== 10 || !/^[6-9]\d{9}$/.test(mobile)}
-                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -540,7 +547,7 @@ const SignIn = () => {
                   <button
                     type="button"
                     onClick={() => { setStep(1); setError(''); }}
-                    className="ml-2 text-xs font-semibold text-pink-600 hover:underline"
+                    className="ml-2 text-xs font-semibold text-pink-600 hover:underline cursor-pointer"
                   >
                     Edit
                   </button>
@@ -572,7 +579,7 @@ const SignIn = () => {
                       type="button"
                       onClick={handleResendOtp}
                       disabled={loading}
-                      className="text-pink-600 font-bold hover:underline"
+                      className="text-pink-600 font-bold hover:underline cursor-pointer"
                     >
                       Resend OTP
                     </button>
@@ -584,7 +591,7 @@ const SignIn = () => {
                 <button
                   type="submit"
                   disabled={loading || getOtpValue().length !== 6}
-                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -652,7 +659,7 @@ const SignIn = () => {
                 <button
                   type="submit"
                   disabled={loading || !newName.trim()}
-                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-pink-500 hover:bg-pink-600 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {loading ? (
                     <>

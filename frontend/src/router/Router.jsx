@@ -18,7 +18,7 @@ import Cart from '../components/cart';
 import Address from '../pages/Address';
 import Search from '../pages/Search';
 import MobileBottomNav from '../components/MobileBottomNav';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import AuthSuccess from '../pages/AuthSuccess';
 import AuthFailure from '../pages/AuthFailure';
 import AdminDashboard from '../pages/admin/AdminDashboard';
@@ -78,7 +78,19 @@ const RequireAdmin = ({ children }) => {
 };
 
 const RedirectIfAuth = ({ children }) => {
-  if (isAuthenticated()) {
+  const [auth, setAuth] = useState(isAuthenticated());
+  
+  useEffect(() => {
+    const handleAuthChange = () => setAuth(isAuthenticated());
+    window.addEventListener('authStateChanged', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
+    return () => {
+      window.removeEventListener('authStateChanged', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
+    };
+  }, []);
+
+  if (auth) {
     return <Navigate to="/" replace />;
   }
   return children;

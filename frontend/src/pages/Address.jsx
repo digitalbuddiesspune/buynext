@@ -243,41 +243,6 @@ export default function AddressForm() {
     }));
   };
 
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const { latitude, longitude } = pos.coords;
-      try {
-        const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
-        const data = await resp.json();
-        const addr = data.address || {};
-        const pincode = addr.postcode || '';
-        const city = addr.city || addr.town || addr.village || addr.district || '';
-        const state = addr.state || '';
-        const locality = addr.suburb || addr.neighbourhood || addr.quarter || '';
-        const road = addr.road || addr.residential || '';
-        const house = addr.house_number ? `${addr.house_number}, ` : '';
-        const composed = `${house}${road}`.trim();
-        setFormData((prev) => ({
-          ...prev,
-          pincode,
-          city,
-          state,
-          locality: locality || prev.locality,
-          address: composed || prev.address,
-        }));
-      } catch (e) {
-        console.error('Reverse geocoding failed', e);
-        alert('Could not fetch address from location');
-      }
-    }, (err) => {
-      alert('Unable to get your location');
-    }, { enableHighAccuracy: true, timeout: 10000 });
-  };
-
   const validateForm = () => {
     const errors = [];
     
@@ -699,16 +664,7 @@ export default function AddressForm() {
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={handleUseCurrentLocation}
-                className="mb-4 sm:mb-6 bg-pink-500 hover:bg-pink-600 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-all text-sm sm:text-base font-medium shadow-md hover:shadow-lg cursor-pointer w-full sm:w-auto"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                </svg>
-                <span className="whitespace-nowrap">Use my current location</span>
-              </button>
+              {/* Address Form Inputs */}
 
               <div className={`grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 ${hasSavedAddress && !editMode ? 'opacity-50 pointer-events-none select-none' : ''}`}>
                 <div>

@@ -10,25 +10,7 @@ const MobileHeader = () => {
   const headerRef = useRef(null);
   const navigate = useNavigate();
 
-  const [navCategories, setNavCategories] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await api.getNavCategoriesWithProducts();
-        if (cancelled || !Array.isArray(data?.categories)) return;
-        setNavCategories(data.categories.length > 0 ? data.categories : null);
-      } catch {
-        if (!cancelled) setNavCategories(null);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const categories = navCategories ?? navbarCategories;
+  const categories = navbarCategories;
 
   // Calculate dropdown top position
   useEffect(() => {

@@ -36,6 +36,7 @@ const STYLE_PROPS = [
   'width',
   'height',
   'maxWidth',
+  'minWidth',
   'display',
   'flexDirection',
   'alignItems',
@@ -48,6 +49,7 @@ const STYLE_PROPS = [
   'overflow',
   'whiteSpace',
   'wordBreak',
+  'flexShrink',
 ];
 
 function waitForImages(element) {
@@ -62,37 +64,58 @@ function waitForImages(element) {
           }
           img.onload = () => resolve();
           img.onerror = () => resolve();
-          setTimeout(resolve, 3000);
+          setTimeout(resolve, 4000);
         })
     )
   );
 }
 
-/** Copy resolved RGB styles from live DOM — avoids html2canvas choking on Tailwind oklch() */
-function inlineComputedStyles(source, target) {
-  if (!source || !target) return;
-
-  const computed = window.getComputedStyle(source);
-  STYLE_PROPS.forEach((prop) => {
-    const value = computed[prop];
-    if (value) target.style[prop] = value;
-  });
-
-  const sourceChildren = source.children;
-  const targetChildren = target.children;
-  for (let i = 0; i < sourceChildren.length; i += 1) {
-    inlineComputedStyles(sourceChildren[i], targetChildren[i]);
-  }
+function walkElements(element, callback) {
+  callback(element);
+  Array.from(element.children).forEach((child) => walkElements(child, callback));
 }
 
-function stripClonedStylesheets(clonedDoc) {
-  clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
+/** Inline computed styles while Tailwind/CSS is still active */
+function snapshotAndInlineStyles(element) {
+  const snapshots = [];
+
+  walkElements(element, (el) => {
+    snapshots.push({
+      el,
+      style: el.getAttribute('style'),
+      className: el.className,
+    });
+
+    const computed = window.getComputedStyle(el);
+    STYLE_PROPS.forEach((prop) => {
+      const value = computed[prop];
+      if (value && value !== 'initial' && value !== 'normal' && value !== 'auto') {
+        el.style[prop] = value;
+      }
+    });
+  });
+
+  return () => {
+    snapshots.forEach(({ el, style, className }) => {
+      if (style) el.setAttribute('style', style);
+      else el.removeAttribute('style');
+      el.className = className;
+    });
+  };
+}
+
+function stripDocumentStylesheets(clonedDoc, captureRoot) {
+  clonedDoc.head?.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
     node.remove();
   });
+
+  // Keep export styles embedded inside the invoice only
+  clonedDoc.body?.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
+    if (!captureRoot.contains(node)) node.remove();
+  });
 }
 
-/** html2canvas cannot parse Tailwind v4 oklch() — temporarily patch/disable stylesheets */
-function withOklchSafeStylesheets(run) {
+function patchOklchInDocument() {
   const styleBackups = [];
   document.querySelectorAll('style').forEach((style) => {
     const content = style.textContent || '';
@@ -108,14 +131,14 @@ function withOklchSafeStylesheets(run) {
     link.disabled = true;
   });
 
-  return run().finally(() => {
+  return () => {
     styleBackups.forEach(([style, content]) => {
       style.textContent = content;
     });
     linkBackups.forEach(([link, disabled]) => {
       link.disabled = disabled;
     });
-  });
+  };
 }
 
 function prepareElementForCapture(element) {
@@ -135,7 +158,9 @@ function prepareElementForCapture(element) {
     'background:#ffffff',
     'z-index:99999',
     'opacity:1',
+    'visibility:visible',
     'pointer-events:none',
+    'overflow:visible',
   ].join(';');
 
   return snapshot;
@@ -149,59 +174,82 @@ function restoreElementAfterCapture(element, snapshot) {
   else element.removeAttribute('aria-hidden');
 }
 
+function createCaptureBackdrop() {
+  const backdrop = document.createElement('div');
+  backdrop.setAttribute('data-invoice-capture-backdrop', 'true');
+  backdrop.style.cssText =
+    'position:fixed;inset:0;background:#ffffff;z-index:99998;pointer-events:none';
+  document.body.appendChild(backdrop);
+  return () => backdrop.remove();
+}
+
 export async function downloadInvoicePdf(element, filename) {
   if (!element) throw new Error('Invoice element not found');
 
-  const snapshot = prepareElementForCapture(element);
+  const captureTarget = element.querySelector('.invoice-export') || element;
+  const elementSnapshot = prepareElementForCapture(element);
+  const removeBackdrop = createCaptureBackdrop();
+  const restoreInlined = snapshotAndInlineStyles(captureTarget);
 
   try {
-    await waitForImages(element);
+    await waitForImages(captureTarget);
     await new Promise((resolve) => {
       requestAnimationFrame(() => requestAnimationFrame(resolve));
     });
 
-    const canvas = await withOklchSafeStylesheets(() =>
-      html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight,
-        onclone: (clonedDoc, clonedElement) => {
-          stripClonedStylesheets(clonedDoc);
-          inlineComputedStyles(element, clonedElement);
-          clonedElement.style.background = '#ffffff';
-        },
-      })
-    );
+    const canvas = await (async () => {
+      const restoreStylesheets = patchOklchInDocument();
+      try {
+        return await html2canvas(captureTarget, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          scrollX: 0,
+          scrollY: -window.scrollY,
+          width: captureTarget.scrollWidth,
+          height: captureTarget.scrollHeight,
+          windowWidth: captureTarget.scrollWidth,
+          windowHeight: captureTarget.scrollHeight,
+          onclone: (clonedDoc, clonedElement) => {
+            stripDocumentStylesheets(clonedDoc, clonedElement);
+            clonedElement.style.background = '#ffffff';
+            clonedElement.style.width = '794px';
+            clonedElement.style.maxWidth = '794px';
+          },
+        });
+      } finally {
+        restoreStylesheets();
+      }
+    })();
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 10;
     const contentWidth = pageWidth - margin * 2;
     const contentHeight = (canvas.height * contentWidth) / canvas.width;
+    const printableHeight = pageHeight - margin * 2;
 
     let heightLeft = contentHeight;
     let position = margin;
 
     pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
-    heightLeft -= pageHeight - margin * 2;
+    heightLeft -= printableHeight;
 
     while (heightLeft > 0) {
       pdf.addPage();
       position = margin - (contentHeight - heightLeft);
       pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
-      heightLeft -= pageHeight - margin * 2;
+      heightLeft -= printableHeight;
     }
 
     pdf.save(filename || 'invoice.pdf');
   } finally {
-    restoreElementAfterCapture(element, snapshot);
+    restoreInlined();
+    restoreElementAfterCapture(element, elementSnapshot);
+    removeBackdrop();
   }
 }

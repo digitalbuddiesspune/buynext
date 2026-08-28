@@ -226,7 +226,7 @@ const AdminInvoiceGenerator = () => {
     let cancelled = false;
 
     const run = async () => {
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 1000));
       if (cancelled || !invoiceRef.current) return;
 
       if (exportAction === 'print') {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { FiGrid, FiBox, FiShoppingBag, FiLogOut, FiUser, FiHome, FiMenu, FiX, FiMapPin, FiMail, FiImage } from 'react-icons/fi';
+import { FiGrid, FiBox, FiShoppingBag, FiLogOut, FiUser, FiHome, FiMenu, FiX, FiMapPin, FiMail, FiImage, FiFileText } from 'react-icons/fi';
 
 const Title = () => {
   const { pathname } = useLocation();
@@ -10,6 +10,7 @@ const Title = () => {
   if (pathname.startsWith('/admin/addresses')) return 'Addresses';
   if (pathname.startsWith('/admin/contact-info')) return 'Contact Info';
   if (pathname.startsWith('/admin/logos')) return 'Logos';
+  if (pathname.startsWith('/admin/invoice-generator')) return 'Invoice Generator';
   return 'Admin';
 };
 
@@ -106,6 +107,7 @@ const AdminLayout = () => {
             {navItem('/admin/addresses', 'Addresses', FiMapPin, 'User addresses')}
             {navItem('/admin/contact-info', 'Contact Info', FiMail, 'Contact details')}
             {navItem('/admin/logos', 'Logos', FiImage, 'Manage logos')}
+            {navItem('/admin/invoice-generator', 'Invoice Generator', FiFileText, 'Create invoices')}
           </nav>
 
           {/* User Section */}
@@ -162,6 +164,7 @@ const AdminLayout = () => {
                 {navItem('/admin/addresses', 'Addresses', FiMapPin, 'User addresses')}
                 {navItem('/admin/contact-info', 'Contact Info', FiMail, 'Contact details')}
                 {navItem('/admin/logos', 'Logos', FiImage, 'Manage logos')}
+                {navItem('/admin/invoice-generator', 'Invoice Generator', FiFileText, 'Create invoices')}
               </nav>
 
               {/* Mobile User Section */}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../utils/api';
-import { FiCreditCard, FiShoppingBag, FiBox, FiUsers, FiTrendingUp, FiDollarSign, FiPackage, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
+import { FiCreditCard, FiShoppingBag, FiBox, FiUsers, FiTrendingUp, FiDollarSign, FiPackage, FiClock, FiCheckCircle, FiXCircle, FiFileText } from 'react-icons/fi';
 import ScrollToTop from '../../components/ScrollToTop';
 
 const AdminDashboard = () => {
@@ -65,7 +65,7 @@ const AdminDashboard = () => {
     );
   };
 
-  const StatCard = ({ icon: Icon, label, value, gradient, trend, trendValue, onClick }) => (
+  const StatCard = ({  label, value, gradient, trend, trendValue, onClick }) => (
     <div 
       onClick={onClick}
       className={`rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-6 shadow-lg border-2 hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 bg-gradient-to-br ${gradient}`}
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
     </div>
   );
 
-  const QuickActionCard = ({ icon: Icon, title, description, link, color }) => (
+  const QuickActionCard = ({  title, description, link, color }) => (
     <Link 
       to={link}
       className={`block p-4 sm:p-5 lg:p-6 rounded-lg sm:rounded-xl border-2 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 bg-white border-${color}-200 hover:border-${color}-400`}
@@ -244,10 +244,10 @@ const AdminDashboard = () => {
                   color="blue"
                 />
                 <QuickActionCard 
-                  icon={FiTrendingUp}
-                  title="Analytics"
-                  description="View detailed analytics"
-                  link="/admin"
+                  icon={FiFileText}
+                  title="Invoice Generator"
+                  description="Create manual invoices"
+                  link="/admin/invoice-generator"
                   color="purple"
                 />
               </div>

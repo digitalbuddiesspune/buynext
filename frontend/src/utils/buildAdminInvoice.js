@@ -38,7 +38,8 @@ export function buildAdminInvoicePayload({
   const orderPayload = {
     _id: invoiceId,
     createdAt,
-    paymentMethod: 'Manual',
+    paymentMethod: 'Online',
+    paymentStatus: 'Paid',
     status: 'confirmed',
     amount: total,
     items: lineItems.map((item) => ({

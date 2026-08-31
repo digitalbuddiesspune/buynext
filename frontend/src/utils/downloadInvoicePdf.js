@@ -234,15 +234,17 @@ export async function downloadInvoicePdf(element, filename) {
     const printableHeight = pageHeight - margin * 2;
 
     let heightLeft = contentHeight;
-    let position = margin;
+    let yPosition = contentHeight <= printableHeight
+      ? (pageHeight - contentHeight) / 2
+      : margin;
 
-    pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
+    pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, contentHeight);
     heightLeft -= printableHeight;
 
     while (heightLeft > 0) {
       pdf.addPage();
-      position = margin - (contentHeight - heightLeft);
-      pdf.addImage(imgData, 'JPEG', margin, position, contentWidth, contentHeight);
+      yPosition = margin - (contentHeight - heightLeft);
+      pdf.addImage(imgData, 'JPEG', margin, yPosition, contentWidth, contentHeight);
       heightLeft -= printableHeight;
     }
 

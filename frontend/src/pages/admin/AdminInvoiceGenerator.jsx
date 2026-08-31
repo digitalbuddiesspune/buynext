@@ -679,9 +679,20 @@ const AdminInvoiceGenerator = () => {
           opacity: 0;
           z-index: -1;
           pointer-events: none;
-          overflow: hidden;
+          overflow: visible;
         }
         @media print {
+          @page {
+            size: A4;
+            margin: 10mm;
+          }
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+          }
           body * {
             visibility: hidden !important;
           }
@@ -694,7 +705,9 @@ const AdminInvoiceGenerator = () => {
             left: 0 !important;
             top: 0 !important;
             width: 100% !important;
+            max-width: none !important;
             opacity: 1 !important;
+            overflow: visible !important;
             z-index: 99999 !important;
             pointer-events: auto !important;
           }

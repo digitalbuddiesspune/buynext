@@ -2,6 +2,7 @@ import { Product } from '../models/product.js';
 import Order from '../models/Order.js';
 import { Address } from '../models/Address.js';
 import User from '../models/User.js';
+import { buildAdminBeautyHygieneFilter } from '../utils/productCategoryFilter.js';
 
 const slugify = (value = '') =>
   value
@@ -217,7 +218,8 @@ export async function updateOrderStatus(req, res) {
 
 export async function adminListProducts(req, res) {
   try {
-    const rawProducts = await Product.find({}).sort({ _id: -1 }).lean();
+    const filter = buildAdminBeautyHygieneFilter();
+    const rawProducts = await Product.find(filter).sort({ _id: -1 }).lean();
     const products = rawProducts.map((p) => {
       const title = p.title || p['SKU Name'] || p.name || p['Product Name'] || p.skuName || 'Product';
       const category = p.category || p['Category'] || p.taxonomy?.mainCategory || 'Uncategorized';
@@ -342,7 +344,7 @@ export async function adminStats(req, res) {
     const totalRevenue = revenueAgg?.total || 0;
     const totalOrders = revenueAgg?.count || 0;
     
-    const totalProducts = await Product.countDocuments();
+    const totalProducts = await Product.countDocuments(buildAdminBeautyHygieneFilter());
     
     return res.json({ totalRevenue, totalOrders, totalProducts });
   } catch (err) {

@@ -26,8 +26,6 @@ import AdminProducts from '../pages/admin/AdminProducts';
 import AdminOrders from '../pages/admin/AdminOrders';
 import AdminLayout from '../pages/admin/AdminLayout';
 import AdminAddresses from '../pages/admin/AdminAddresses';
-import AdminContactInfo from '../pages/admin/AdminContactInfo';
-import AdminLogos from '../pages/admin/AdminLogos';
 import AdminInvoiceGenerator from '../pages/admin/AdminInvoiceGenerator';
 import PrivacyPolicy from '../pages/PrivacyPolicy';
 import TermsAndConditions from '../pages/TermsAndConditions';
@@ -169,8 +167,6 @@ const Router = () => {
             <Route path="products" element={<AdminProducts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="addresses" element={<AdminAddresses />} />
-            <Route path="contact-info" element={<AdminContactInfo />} />
-            <Route path="logos" element={<AdminLogos />} />
             <Route path="invoice-generator" element={<AdminInvoiceGenerator />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

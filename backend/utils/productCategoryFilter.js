@@ -97,3 +97,52 @@ export function buildProductCategoryAndFilter(rawMain, rawCategory, rawSubCatego
 
   return andConditions.length > 0 ? { $and: andConditions } : {};
 }
+
+/** Admin catalog — only Beauty & Hygiene main category */
+export const BEAUTY_HYGIENE_MAIN = 'Beauty & Hygiene';
+
+const BEAUTY_HYGIENE_REGEX = '^beauty\\s*(?:&|and)\\s*hygiene$';
+
+/** Match main category on Blinkit `Category` / normalized `category` / taxonomy fields */
+export function buildAdminBeautyHygieneFilter() {
+  const looseMainMatch = (fieldPath) => ({
+    $expr: {
+      $regexMatch: {
+        input: { $toLower: { $ifNull: [fieldPath, ''] } },
+        regex: BEAUTY_HYGIENE_REGEX,
+      },
+    },
+  });
+
+  return {
+    $or: [
+      looseMainMatch('$Category'),
+      looseMainMatch('$category'),
+      looseMainMatch('$taxonomy.mainCategory'),
+      { 'taxonomy.mainCategorySlug': { $in: ['beauty-hygiene', 'beauty-and-hygiene'] } },
+    ],
+  };
+}
+
+/** Optional sub-category filter for admin (Blinkit `Sub-Category` or normalized subcategory) */
+export function buildAdminBeautySubcategoryFilter(rawSubCategory = '') {
+  const sub = rawSubCategory.toString().trim();
+  if (!sub) return buildAdminBeautyHygieneFilter();
+
+  const subLooseRe = buildLooseCategoryRegex(sub);
+  const subSlug = slugify(sub);
+
+  return {
+    $and: [
+      buildAdminBeautyHygieneFilter(),
+      {
+        $or: [
+          { $expr: { $regexMatch: { input: { $toLower: { $ifNull: ['$Sub-Category', ''] } }, regex: subLooseRe.source, options: 'i' } } },
+          { $expr: { $regexMatch: { input: { $toLower: { $ifNull: ['$subcategory', ''] } }, regex: subLooseRe.source, options: 'i' } } },
+          { 'taxonomy.subCategorySlug': subSlug },
+          { 'taxonomy.subCategory': { $regex: subLooseRe } },
+        ],
+      },
+    ],
+  };
+}

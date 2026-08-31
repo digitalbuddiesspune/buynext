@@ -1,5 +1,5 @@
 import { Fragment, useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, Link, NavLink, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { fetchSareeById, fetchSarees } from '../services/api';
 import { useWishlist } from '../context/WishlistContext';
@@ -166,7 +166,7 @@ const ProductDetail = () => {
   const { id, category } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToCart } = useCart();
+  const { addToCart, cart } = useCart();
   const { isInWishlist, toggleWishlist, isTogglingWishlist, wishlistError } = useWishlist();
   const parseRupeeValue = (value) => {
     if (typeof value === 'number') return value;
@@ -536,8 +536,20 @@ const ProductDetail = () => {
   const displayTitle = productTitle;
 
   const productId = product._id || product.id;
+  const inCart = cart.some((item) => String(item.id || item._id) === String(productId));
   const wishlisted = isInWishlist(productId);
   const wishlistPending = isTogglingWishlist(productId);
+
+  const renderCartAction = (className) =>
+    inCart ? (
+      <NavLink to="/cart" className={className}>
+        GO TO CART
+      </NavLink>
+    ) : (
+      <button type="button" onClick={handleAddToCart} className={className}>
+        ADD TO CART
+      </button>
+    );
 
   const handleWishlistToggle = async () => {
     if (!isAuthenticated()) return setShowLoginModal(true);
@@ -637,12 +649,9 @@ const ProductDetail = () => {
               </div>
 
               <div className="mt-4 hidden sm:flex gap-2">
-                <button
-                  onClick={handleAddToCart}
-                  className="flex-1 h-12 bg-[#ff9f00] text-white font-semibold rounded-sm hover:opacity-95"
-                >
-                  ADD TO CART
-                </button>
+                {renderCartAction(
+                  'flex-1 h-12 bg-[#ff9f00] text-white font-semibold rounded-sm hover:opacity-95 flex items-center justify-center'
+                )}
                 <button
                   onClick={handleBuyNow}
                   className="flex-1 h-12 bg-[#fb641b] text-white font-semibold rounded-sm hover:opacity-95"
@@ -771,12 +780,9 @@ const ProductDetail = () => {
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-[0_-2px_8px_rgba(0,0,0,0.08)]">
         <div className="p-2">
           <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={handleAddToCart}
-              className="h-11 bg-[#ff9f00] text-white text-sm font-semibold rounded-sm"
-            >
-              ADD TO CART
-            </button>
+            {renderCartAction(
+              'h-11 bg-[#ff9f00] text-white text-sm font-semibold rounded-sm flex items-center justify-center'
+            )}
             <button
               onClick={handleBuyNow}
               className="h-11 bg-[#fb641b] text-white text-sm font-semibold rounded-sm"

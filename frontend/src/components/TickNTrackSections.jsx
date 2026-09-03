@@ -6,7 +6,6 @@ import bathAndHandwashImg from '../assets/bath and handwash.png';
 import feminineHygieneImg from '../assets/Feminine Hygiene1.png';
 import fragrancesDeosImg from '../assets/Fragrances & Deos1.png';
 import haircareImg from '../assets/Hair Care1.png';
-import healthAndMedicineImg from '../assets/Health & Medicine1.png';
 import makeupImg from '../assets/Makeup1.png';
 import oralCareImg from '../assets/oral care1.png';
 import skinCareImg from '../assets/skin care1.png';
@@ -58,12 +57,6 @@ const BuyNestSections = () => {
         path: '/category/beauty-and-hygiene/hair-care' 
       },
       { 
-        name: 'Health & Medicine', 
-        icon: '💊', 
-        image: healthAndMedicineImg, 
-        path: '/category/beauty-and-hygiene/health-and-medicine' 
-      },
-      { 
         name: 'Makeup', 
         icon: '💄', 
         image: makeupImg, 
@@ -113,15 +106,29 @@ const BuyNestSections = () => {
                   CURATED PICKS FOR YOUR STYLE
                 </p>
               </div>
-
-              
             </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6 px-2 sm:px-4">
+
+          {/* Mobile / tablet: horizontal swipe. Large screens: 7 equal columns */}
+          <div
+            className="
+              flex gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain
+              snap-x snap-mandatory scroll-smooth
+              [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+              px-2 sm:px-4 pb-2
+              lg:grid lg:grid-cols-7 lg:gap-4 lg:overflow-visible lg:snap-none lg:pb-0
+            "
+          >
             {categories.map((category, index) => (
               <div
                 key={index}
-                className="group cursor-pointer"
+                className="
+                  group cursor-pointer snap-start shrink-0
+                  w-[42vw] min-w-[140px] max-w-[180px]
+                  sm:w-[38vw] sm:min-w-[160px] sm:max-w-[200px]
+                  md:w-[28vw] md:min-w-[170px] md:max-w-[210px]
+                  lg:w-auto lg:min-w-0 lg:max-w-none lg:shrink
+                "
                 onClick={() => handleCategoryClick(category.path)}
               >
                 <div className="relative aspect-[3/2] bg-white rounded-xl sm:rounded-2xl border border-gray-200 hover:border-gray-400 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:scale-105">

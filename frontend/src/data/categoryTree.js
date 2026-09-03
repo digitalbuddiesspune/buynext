@@ -16,7 +16,6 @@ export const categoryTree = [
       { name: 'Feminine Hygiene' },
       { name: 'Fragrances & Deos' },
       { name: 'Hair Care' },
-      { name: 'Health & Medicine' },
       { name: 'Makeup' },
       { name: 'Oral Care' },
       { name: 'Skin Care' },

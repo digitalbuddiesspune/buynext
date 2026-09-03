@@ -9,7 +9,6 @@ export const navCategoryTree = [
       { name: 'Feminine Hygiene' },
       { name: 'Fragrances & Deos' },
       { name: 'Hair Care' },
-      { name: 'Health & Medicine' },
       { name: 'Makeup' },
       { name: "Men's Grooming" },
       { name: 'Oral Care' },

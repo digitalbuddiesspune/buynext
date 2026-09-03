@@ -67,7 +67,6 @@ const Footer = () => {
     { name: 'Feminine Hygiene', path: '/category/beauty-and-hygiene/feminine-hygiene' },
     { name: 'Fragrances & Deos', path: '/category/beauty-and-hygiene/fragrances-and-deos' },
     { name: 'Hair Care', path: '/category/beauty-and-hygiene/hair-care' },
-    { name: 'Health & Medicine', path: '/category/beauty-and-hygiene/health-and-medicine' },
     { name: 'Makeup', path: '/category/beauty-and-hygiene/makeup' },
     { name: 'Oral Care', path: '/category/beauty-and-hygiene/oral-care' },
     { name: 'Skin Care', path: '/category/beauty-and-hygiene/skin-care' },

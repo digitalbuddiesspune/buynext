@@ -228,7 +228,7 @@ const BuyNestSections = () => {
           {/* Mobile / tablet: swipe + auto scroll */}
           <div className="lg:hidden px-2 sm:px-4">
             <div
-              className="relative overflow-hidden rounded-2xl shadow-xl select-none"
+              className="relative overflow-hidden  select-none"
               onTouchStart={onTouchStart}
               onTouchEnd={onTouchEnd}
             >

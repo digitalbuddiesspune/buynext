@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaTruck, FaAward, FaShieldAlt, FaUndo } from 'react-icons/fa';
 
@@ -11,7 +11,6 @@ import oralCareImg from '../assets/oral care1.png';
 import skinCareImg from '../assets/skin care1.png';
 
 import offerZone1Img from '../assets/offerzone1.png';
-import offerZone2Img from '../assets/offerzone2.png';
 import offerZone3Img from '../assets/offerzone3.png';
 import offerZone4Img from '../assets/offerzone4.png';
 
@@ -160,40 +159,57 @@ const BuyNestSections = () => {
   // Offer Zone Section
   const FeaturedSection = () => {
     const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
+    const touchStartX = useRef(null);
     const offers = [
       {
         id: 1,
         image: offerZone1Img,
-        path: '/category/beauty-and-hygiene'
-      },
-      {
-        id: 2,
-        image: offerZone2Img,
-        path: '/category/beauty-and-hygiene/skin-care'
+        name: 'Bath & Hand Wash',
+        path: '/category/beauty-and-hygiene/bath-and-hand-wash',
       },
       {
         id: 3,
         image: offerZone3Img,
-        path: '/category/beauty-and-hygiene/makeup'
+        name: 'Fragrances & Deos',
+        path: '/category/beauty-and-hygiene/fragrances-and-deos',
       },
       {
         id: 4,
         image: offerZone4Img,
-        path: '/category/beauty-and-hygiene'
-      }
+        name: 'Makeup',
+        path: '/category/beauty-and-hygiene/makeup',
+      },
     ];
 
     useEffect(() => {
       const intervalId = setInterval(() => {
         setCurrentOfferIndex((prev) => (prev + 1) % offers.length);
-      }, 3000);
+      }, 3500);
       return () => clearInterval(intervalId);
     }, [offers.length]);
+
+    const goTo = (idx) => {
+      const next = ((idx % offers.length) + offers.length) % offers.length;
+      setCurrentOfferIndex(next);
+    };
+
+    const onTouchStart = (e) => {
+      touchStartX.current = e.touches[0]?.clientX ?? null;
+    };
+
+    const onTouchEnd = (e) => {
+      if (touchStartX.current == null) return;
+      const endX = e.changedTouches[0]?.clientX ?? touchStartX.current;
+      const delta = endX - touchStartX.current;
+      touchStartX.current = null;
+      if (Math.abs(delta) < 40) return;
+      if (delta < 0) goTo(currentOfferIndex + 1);
+      else goTo(currentOfferIndex - 1);
+    };
 
     return (
       <section
         className="pt-4 pb-6 sm:pt-4 sm:pb-7 md:pt-5 md:pb-8 lg:pt-6 lg:pb-10 px-2 sm:px-4 md:px-6 lg:px-8 w-full"
-        style={{ backgroundColor: '#FFFFFF' }}
       >
         <div className="w-full">
           <div className="text-center mb-2 sm:mb-3 md:mb-4 px-2 sm:px-4">
@@ -208,9 +224,14 @@ const BuyNestSections = () => {
               OFFER ZONE
             </h2>
           </div>
-          {/* Mobile: auto circular carousel */}
-          <div className="sm:hidden px-2">
-            <div className="overflow-hidden rounded-2xl shadow-xl">
+
+          {/* Mobile / tablet: swipe + auto scroll */}
+          <div className="lg:hidden px-2 sm:px-4">
+            <div
+              className="relative overflow-hidden rounded-2xl shadow-xl select-none"
+              onTouchStart={onTouchStart}
+              onTouchEnd={onTouchEnd}
+            >
               <div
                 className="flex transition-transform duration-700 ease-in-out"
                 style={{ transform: `translateX(-${currentOfferIndex * 100}%)` }}
@@ -221,26 +242,27 @@ const BuyNestSections = () => {
                     onClick={() => handleCategoryClick(offer.path)}
                     className="relative w-full flex-shrink-0 overflow-hidden group cursor-pointer"
                   >
-                    <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full"></div>
                     <img
                       src={offer.image}
-                      alt=""
-                      className="w-full h-full object-cover"
+                      alt={offer.name}
+                      className="w-full h-auto object-cover"
+                      draggable={false}
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/600/1F2937/FFFFFF?text=Offer';
+                        e.target.src = 'https://via.placeholder.com/1200x400/1F2937/FFFFFF?text=Offer';
                       }}
                     />
                   </div>
                 ))}
               </div>
             </div>
+
             <div className="flex items-center justify-center gap-2 mt-3">
               {offers.map((offer, idx) => (
                 <button
                   key={offer.id}
                   type="button"
-                  onClick={() => setCurrentOfferIndex(idx)}
+                  onClick={() => goTo(idx)}
                   aria-label={`Go to offer ${idx + 1}`}
                   className={`h-2 rounded-full transition-all ${
                     currentOfferIndex === idx ? 'w-6 bg-[#5c9404]' : 'w-2 bg-gray-300'
@@ -250,19 +272,18 @@ const BuyNestSections = () => {
             </div>
           </div>
 
-          {/* Tablet/Desktop: grid */}
-          <div className="hidden sm:grid grid-cols-2 gap-4 md:gap-5 lg:gap-6 px-2 sm:px-4">
+          {/* Large screens: 3 banners in one row */}
+          <div className="hidden lg:grid grid-cols-3 gap-4 xl:gap-6 px-2 sm:px-4">
             {offers.map((offer) => (
               <div
                 key={offer.id}
                 onClick={() => handleCategoryClick(offer.path)}
-                className="relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-[1.02] group cursor-pointer"
+                className="relative overflow-hidden  transition-all duration-300  group cursor-pointer"
               >
-                <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full"></div>
                 <img
                   src={offer.image}
-                  alt=""
-                  className="w-full h-full object-cover transition-transform duration-300 transform group-hover:scale-[1.03]"
+                  alt={offer.name}
+                  className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
                   onError={(e) => {
                     e.target.onerror = null;
                     e.target.src = 'https://via.placeholder.com/600/1F2937/FFFFFF?text=Offer';

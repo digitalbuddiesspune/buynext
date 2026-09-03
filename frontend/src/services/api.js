@@ -40,7 +40,7 @@ const getCategoryEndpoint = (category) => {
   return null;
 };
 
-export const fetchSarees = async (category, subcategory = null, mainCategory = null) => {
+export const fetchSarees = async (category, subcategory = null, mainCategory = null, limit = null) => {
   try {
     // Determine which endpoint to use based on category
     const categoryEndpoint = getCategoryEndpoint(category);
@@ -62,6 +62,9 @@ export const fetchSarees = async (category, subcategory = null, mainCategory = n
       if (subcategory) {
         params.append('subcategory', subcategory);
       }
+      if (limit) {
+        params.append('limit', String(limit));
+      }
       
       if (params.toString()) {
         url += `?${params.toString()}`;
@@ -79,6 +82,9 @@ export const fetchSarees = async (category, subcategory = null, mainCategory = n
       }
       if (category) {
         params.append('category', category);
+      }
+      if (limit) {
+        params.append('limit', String(limit));
       }
       
       if (params.toString()) {

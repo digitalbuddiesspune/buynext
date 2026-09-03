@@ -1,6 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaTruck, FaAward, FaShieldAlt, FaUndo } from 'react-icons/fa';
+import { FaTruck, FaAward, FaShieldAlt, FaUndo, FaStar, FaRegStar } from 'react-icons/fa';
+
+import { categoryTree, slugifyCategory } from '../data/categoryTree';
+import { fetchSarees } from '../services/api';
+import { getProductImage, placeholders } from '../utils/imagePlaceholder';
 
 import bathAndHandwashImg from '../assets/bath and handwash.png';
 import feminineHygieneImg from '../assets/Feminine Hygiene1.png';
@@ -18,6 +22,44 @@ import premiumSkinCareImg from '../assets/priminum skincare.png';
 import premiumMakeupImg from '../assets/primiummakeup.png';
 import premiumHairCareImg from '../assets/primium haircare.png';
 import premiumFragrancesImg from '../assets/primiumfragerence.png';
+
+const MAIN_CATEGORY_SLUG = 'beauty-and-hygiene';
+const MAIN_CATEGORY_LABEL = 'Beauty And Hygiene';
+const BEST_SELLERS_PER_CATEGORY = 5;
+
+const getProductPrice = (p) =>
+  Number(p?.price ?? p?.mrp ?? p?.originalPrice ?? p?.finalPrice ?? 0) || 0;
+
+const hasDisplayablePrice = (p) => getProductPrice(p) > 0;
+
+const getProductRatingValue = (p) => {
+  const r = p?.rating ?? p?.averageRating ?? p?.ratingAvg ?? p?.ratingsAvg ?? p?.product_info?.rating;
+  const n = Number(r);
+  return Number.isFinite(n) && n > 0 ? n : 4.2;
+};
+
+const getProductBrand = (p) =>
+  p?.product_info?.brand ||
+  p?.brand ||
+  p?.product_info?.manufacturer ||
+  p?.manufacturer ||
+  p?.product_info?.brandName ||
+  'BuyNest';
+
+const getProductShortDescription = (p) =>
+  String(
+    p?.shortDescription ||
+      p?.description ||
+      p?.product_info?.shortDescription ||
+      p?.product_info?.description ||
+      ''
+  ).trim();
+
+const beautySubcategories = categoryTree[0].subcategories.map((sub) => ({
+  name: sub.name,
+  slug: slugifyCategory(sub.name),
+  path: `/category/${MAIN_CATEGORY_SLUG}/${slugifyCategory(sub.name)}`,
+}));
 
 const BuyNestSections = () => {
   const navigate = useNavigate();
@@ -292,6 +334,195 @@ const BuyNestSections = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+    );
+  };
+
+  const BestSellers = () => {
+    const [sections, setSections] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      let cancelled = false;
+
+      const loadBestSellers = async () => {
+        try {
+          const results = await Promise.all(
+            beautySubcategories.map(async (sub) => {
+              const data = await fetchSarees(sub.slug, null, MAIN_CATEGORY_LABEL, 25);
+              const products = (Array.isArray(data) ? data : [])
+                .filter(hasDisplayablePrice)
+                .slice(0, BEST_SELLERS_PER_CATEGORY);
+              return { ...sub, products };
+            })
+          );
+
+          if (!cancelled) {
+            setSections(results.filter((section) => section.products.length > 0));
+          }
+        } catch {
+          if (!cancelled) setSections([]);
+        } finally {
+          if (!cancelled) setLoading(false);
+        }
+      };
+
+      loadBestSellers();
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
+    const handleProductClick = (productId) => {
+      if (!productId) return;
+      navigate(`/product/${productId}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    if (!loading && sections.length === 0) return null;
+
+    return (
+      <section
+        className="pt-4 pb-6 sm:pt-5 sm:pb-8 md:pt-6 md:pb-10 lg:pt-8 lg:pb-12 px-2 sm:px-4 md:px-6 lg:px-8 w-full"
+        style={{ backgroundColor: '#FFFFFF' }}
+      >
+        <div className="w-full">
+          <div className="mb-4 sm:mb-6 md:mb-8 px-2 sm:px-4">
+            <div className="inline-flex items-center gap-2 rounded-full px-4 py-1 border border-amber-200 bg-white">
+              <span className="text-xs font-bold tracking-wide text-amber-600">TOP PICKS</span>
+            </div>
+            <h2
+              className="mt-2 text-2xl md:text-xl lg:text-4xl font-extrabold text-black leading-tight"
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                letterSpacing: '1px',
+              }}
+            >
+              Best <span className="text-[#5c9404]">Sellers</span>
+            </h2>
+            <p className="mt-1 text-xs sm:text-sm md:text-base tracking-wider font-semibold text-gray-600">
+              FIVE TOP PRODUCTS FROM EACH CATEGORY
+            </p>
+          </div>
+
+          {loading ? (
+            <div className="space-y-8 px-2 sm:px-4">
+              {beautySubcategories.slice(0, 3).map((sub) => (
+                <div key={sub.slug}>
+                  <div className="h-6 w-40 bg-gray-200 rounded animate-pulse mb-4" />
+                  <div className="flex gap-3 overflow-hidden">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="shrink-0 w-[42vw] min-w-[140px] max-w-[180px] sm:w-[28vw] lg:w-auto lg:flex-1"
+                      >
+                        <div className="aspect-[3/4] bg-gray-200 rounded-lg animate-pulse" />
+                        <div className="h-4 bg-gray-200 rounded mt-3 animate-pulse" />
+                        <div className="h-4 bg-gray-100 rounded mt-2 w-2/3 animate-pulse" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-8 sm:space-y-10">
+              {sections.map((section) => (
+                <div key={section.slug} className="px-2 sm:px-4">
+                  <div className="flex items-center justify-between gap-3 mb-3 sm:mb-4">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                      {section.name}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => handleCategoryClick(section.path)}
+                      className="text-xs sm:text-sm font-semibold text-[#5c9404] hover:text-[#4a7a03] whitespace-nowrap"
+                    >
+                      View All →
+                    </button>
+                  </div>
+
+                  <div
+                    className="
+                      flex gap-3 sm:gap-4 overflow-x-auto overscroll-x-contain
+                      snap-x snap-mandatory scroll-smooth pb-2
+                      [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                      lg:grid lg:grid-cols-5 lg:gap-4 lg:overflow-visible lg:snap-none lg:pb-0
+                    "
+                  >
+                    {section.products.map((product) => {
+                      const price = getProductPrice(product);
+                      const brand = getProductBrand(product);
+                      const shortDescription = getProductShortDescription(product);
+                      const ratingValue = getProductRatingValue(product);
+
+                      return (
+                        <div
+                          key={product._id || product.title}
+                          onClick={() => handleProductClick(product._id)}
+                          className="
+                            group bg-white overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300
+                            cursor-pointer border border-gray-100 snap-start shrink-0
+                            w-[42vw] min-w-[140px] max-w-[180px]
+                            sm:w-[28vw] sm:min-w-[160px] sm:max-w-[200px]
+                            lg:w-auto lg:min-w-0 lg:max-w-none lg:shrink
+                          "
+                        >
+                          <div className="relative w-full aspect-[3/4] bg-gray-100 overflow-hidden flex items-center justify-center">
+                            <img
+                              src={getProductImage(product, 'image1')}
+                              alt={product.title || 'Product'}
+                              className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = placeholders.productList;
+                              }}
+                            />
+                          </div>
+
+                          <div className="p-3 sm:p-4 bg-white">
+                            <p className="text-xs sm:text-sm font-bold text-black line-clamp-2 mb-2 min-h-[2.25rem] sm:min-h-[2.5rem] group-hover:text-[#5c9404] transition-colors">
+                              {product.title || 'Untitled Product'}
+                            </p>
+
+                            <p className="text-[11px] sm:text-xs text-gray-700/80 line-clamp-2 mb-2 min-h-[1.25rem]">
+                              {shortDescription || ' '}
+                            </p>
+
+                            <h4 className="text-[10px] sm:text-xs font-semibold text-[#5c9404] uppercase tracking-wide line-clamp-1 mb-2">
+                              {brand}
+                            </h4>
+
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <div className="flex items-center">
+                                {Array.from({ length: 5 }).map((_, idx) => {
+                                  const ratingRounded = Math.round(ratingValue);
+                                  return idx < ratingRounded ? (
+                                    <FaStar key={idx} className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500" />
+                                  ) : (
+                                    <FaRegStar key={idx} className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-500" />
+                                  );
+                                })}
+                              </div>
+                              <span className="text-[10px] sm:text-xs font-medium text-gray-700">
+                                {ratingValue.toFixed(1)}
+                              </span>
+                            </div>
+
+                            <span className="text-base sm:text-lg font-bold text-green-600">
+                              ₹{Math.round(price).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     );
@@ -642,6 +873,7 @@ const BuyNestSections = () => {
   return (
     <div style={{ backgroundColor: '#FFFFFF' }}>
       <MainCategories />
+      <BestSellers />
       <FeaturedSection />
       <PremiumCollection />
       <WhyChooseUs />

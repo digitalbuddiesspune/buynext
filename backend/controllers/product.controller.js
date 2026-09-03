@@ -27,14 +27,19 @@ export const getProducts = async (req, res) => {
     const categoryLooseRe = buildLooseCategoryRegex(rawCategory || categorySlug.replace(/-/g, ' '));
     const subCategoryLooseRe = buildLooseCategoryRegex(rawSubCategory || subCategorySlug.replace(/-/g, ' '));
 
+    const parsedLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(parsedLimit, 100) : 0;
+
     // Use _id sort (indexed by default) to avoid in-memory sort limit errors.
-    let products = await Product.find(query).sort({ _id: -1 });
+    let productsQuery = Product.find(query).sort({ _id: -1 });
+    if (limit) productsQuery = productsQuery.limit(limit);
+    let products = await productsQuery;
 
     // Fallback for manually inserted raw dataset docs:
     // if strict 3-level match returns no rows, try relaxed leaf match.
     if (products.length === 0 && (subCategoryLooseRe || rawSubCategory)) {
       const leafRegex = subCategoryLooseRe || new RegExp(rawSubCategory, 'i');
-      products = await Product.find({
+      let leafQuery = Product.find({
         $or: [
           { 'taxonomy.subSubCategorySlug': subCategorySlug },
           { subSubCategory: { $regex: leafRegex } },
@@ -45,6 +50,8 @@ export const getProducts = async (req, res) => {
           { 'SKU Name': { $regex: leafRegex } },
         ],
       }).sort({ _id: -1 });
+      if (limit) leafQuery = leafQuery.limit(limit);
+      products = await leafQuery;
     }
 
     // Native Mongo fallback for raw-key docs inserted directly via Compass.
@@ -56,8 +63,9 @@ export const getProducts = async (req, res) => {
       if (subCategoryLooseRe) rawAnd.push({ 'Sub-sub-Category': { $regex: subCategoryLooseRe } });
 
       const rawQuery = rawAnd.length > 0 ? { $and: rawAnd } : {};
-      const rawDocs = await Product.collection.find(rawQuery).sort({ _id: -1 }).toArray();
-      products = rawDocs;
+      let rawCursor = Product.collection.find(rawQuery).sort({ _id: -1 });
+      if (limit) rawCursor = rawCursor.limit(limit);
+      products = await rawCursor.toArray();
     }
 
     // Process image URLs to ensure they're absolute

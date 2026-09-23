@@ -75,6 +75,7 @@ const AdminInvoiceGenerator = () => {
   const [shippingOverride, setShippingOverride] = useState(null);
   const [includeGst, setIncludeGst] = useState(true);
   const [invoiceDate, setInvoiceDate] = useState(todayDateInputValue);
+  const [orderTxnId, setOrderTxnId] = useState('');
   const [invoiceData, setInvoiceData] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [exportKey, setExportKey] = useState(0);
@@ -181,6 +182,7 @@ const AdminInvoiceGenerator = () => {
       shipping,
       total,
       invoiceDate,
+      orderTxnId,
     });
 
   const queueExport = (action, payload) => {
@@ -257,6 +259,7 @@ const AdminInvoiceGenerator = () => {
     setProductSearch('');
     setShippingOverride(null);
     setInvoiceDate(todayDateInputValue());
+    setOrderTxnId('');
   };
 
   const formatINR = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`;
@@ -580,6 +583,21 @@ const AdminInvoiceGenerator = () => {
                     onChange={(e) => setInvoiceDate(e.target.value)}
                     className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-pink-500 focus:outline-none"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">
+                    Order TXN ID
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter payment / transaction ID"
+                    value={orderTxnId}
+                    onChange={(e) => setOrderTxnId(e.target.value)}
+                    className={inputClass}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Optional — shown on the invoice when provided
+                  </p>
                 </div>
                 <label className="flex items-center gap-2 text-sm text-gray-700">
                   <input

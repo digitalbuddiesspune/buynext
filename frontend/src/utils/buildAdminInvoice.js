@@ -11,6 +11,7 @@ export function buildAdminInvoicePayload({
   shipping,
   total,
   invoiceDate,
+  orderTxnId,
 }) {
   if (!customer?.fullName?.trim()) {
     return { error: 'Please enter customer name' };
@@ -42,6 +43,7 @@ export function buildAdminInvoicePayload({
     paymentStatus: 'Paid',
     status: 'confirmed',
     amount: total,
+    orderTxnId: orderTxnId?.trim() || '',
     items: lineItems.map((item) => ({
       product: item.product,
       quantity: item.quantity,

@@ -76,9 +76,16 @@ const Invoice = ({ order, user, onPrint, totals: totalsOverride, invoiceNumber: 
     ].filter(Boolean).join(', '),
   ].filter(Boolean);
 
+  const orderTxnId =
+    order.orderTxnId ||
+    order.payuTxnId ||
+    order.razorpayPaymentId ||
+    '';
+
   const invoiceDetailsRows = [
     ['Invoice No:', invoiceNumber],
     ['Order No:', orderNumber],
+    ...(orderTxnId ? [['Order TXN ID:', orderTxnId]] : []),
     ['Order Status:', statusLabel],
     ['Payment Mode:', paymentLabel],
     ['Place of Supply:', placeOfSupply],
